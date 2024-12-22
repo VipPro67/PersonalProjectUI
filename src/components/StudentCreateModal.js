@@ -1,33 +1,40 @@
-import React, { useState } from 'react';
-
+import React, { useState } from "react";
+import ValidationMessage from "./ValidationMessage";
 const StudentCreateModal = ({ onClose, onCreate, token }) => {
   const [newStudent, setNewStudent] = useState({
-    fullName: '',
-    email: '',
-    phoneNumber: '',
-    dateOfBirth: '',
-    address: '',
-    grade: ''
+    fullName: "",
+    email: "",
+    phoneNumber: "",
+    dateOfBirth: "",
+    address: "",
+    grade: 0,
   });
+  const [errors, setErrors] = useState([]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setNewStudent(prev => ({ ...prev, [name]: value }));
+    setNewStudent((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const formattedStudent = {
       ...newStudent,
       grade: parseInt(newStudent.grade),
-      dateOfBirth: formatDateForSubmit(newStudent.dateOfBirth)
+      dateOfBirth: formatDateForSubmit(newStudent.dateOfBirth),
     };
-    onCreate(formattedStudent);
+    var validationErrors = await onCreate(formattedStudent);
+    if (validationErrors) {
+      console.error("Validation errors:", validationErrors);
+      setErrors(validationErrors);
+    } else {
+      onClose();
+    }
   };
 
   const formatDateForSubmit = (dateString) => {
-    if (!dateString) return '';
-    const [year, month, day] = dateString.split('-');
+    if (!dateString) return "";
+    const [year, month, day] = dateString.split("-");
     return `${day}-${month}-${year}`;
   };
 
@@ -40,14 +47,27 @@ const StudentCreateModal = ({ onClose, onCreate, token }) => {
             onClick={onClose}
             className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
           >
-            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+            <svg
+              className="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
         <form onSubmit={handleSubmit} className="p-4">
           <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="fullName">
+            <label
+              className="block text-gray-700 text-sm font-bold mb-2"
+              htmlFor="fullName"
+            >
               Full Name
             </label>
             <input
@@ -56,12 +76,17 @@ const StudentCreateModal = ({ onClose, onCreate, token }) => {
               name="fullName"
               value={newStudent.fullName}
               onChange={handleChange}
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              required
+              className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${
+                errors.FullName ? "border-red-500" : ""
+              }`}
             />
+            <ValidationMessage errors={errors} field="FullName" />
           </div>
           <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="email">
+            <label
+              className="block text-gray-700 text-sm font-bold mb-2"
+              htmlFor="email"
+            >
               Email
             </label>
             <input
@@ -70,12 +95,17 @@ const StudentCreateModal = ({ onClose, onCreate, token }) => {
               name="email"
               value={newStudent.email}
               onChange={handleChange}
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              required
+              className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${
+                errors.Email ? "border-red-500" : ""
+              }`}
             />
+            <ValidationMessage errors={errors} field="Email" />
           </div>
           <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="phoneNumber">
+            <label
+              className="block text-gray-700 text-sm font-bold mb-2"
+              htmlFor="phoneNumber"
+            >
               Phone Number
             </label>
             <input
@@ -84,12 +114,17 @@ const StudentCreateModal = ({ onClose, onCreate, token }) => {
               name="phoneNumber"
               value={newStudent.phoneNumber}
               onChange={handleChange}
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              required
+              className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${
+                errors.PhoneNumber ? "border-red-500" : ""
+              }`}
             />
+            <ValidationMessage errors={errors} field="PhoneNumber" />
           </div>
           <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="dateOfBirth">
+            <label
+              className="block text-gray-700 text-sm font-bold mb-2"
+              htmlFor="dateOfBirth"
+            >
               Date of Birth
             </label>
             <input
@@ -98,26 +133,21 @@ const StudentCreateModal = ({ onClose, onCreate, token }) => {
               name="dateOfBirth"
               value={newStudent.dateOfBirth}
               onChange={handleChange}
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              required
+              className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${
+                errors.DateOfBirth ? "border-red-500" : ""
+              }`}
             />
+            {errors.DateOfBirth && (
+              <p className="text-red-500 text-xs italic">
+                {errors.DateOfBirth}
+              </p>
+            )}
           </div>
           <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="address">
-              Address
-            </label>
-            <input
-              type="text"
-              id="address"
-              name="address"
-              value={newStudent.address}
-              onChange={handleChange}
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              required
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="grade">
+            <label
+              className="block text-gray-700 text-sm font-bold mb-2"
+              htmlFor="grade"
+            >
               Grade
             </label>
             <input
@@ -126,10 +156,32 @@ const StudentCreateModal = ({ onClose, onCreate, token }) => {
               name="grade"
               value={newStudent.grade}
               onChange={handleChange}
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              required
+              className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${
+                errors.Grade ? "border-red-500" : ""
+              }`}
             />
+            <ValidationMessage errors={errors} field="Grade" />
           </div>
+          <div className="mb-4">
+            <label
+              className="block text-gray-700 text-sm font-bold mb-2"
+              htmlFor="address"
+            >
+              Address
+            </label>
+            <input
+              type="text"
+              id="address"
+              name="address"
+              value={newStudent.address}
+              onChange={handleChange}
+              className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${
+                errors.Address ? "border-red-500" : ""
+              }`}
+            />
+            <ValidationMessage errors={errors} field="Address" />
+          </div>
+
           <div className="flex items-center justify-between">
             <button
               type="submit"

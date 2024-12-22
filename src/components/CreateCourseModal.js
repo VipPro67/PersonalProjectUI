@@ -1,24 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
+import ValidationMessage from "./ValidationMessage";
 
 const CreateCourseModal = ({ onClose, onCreate }) => {
   const [newCourse, setNewCourse] = useState({
-    courseId: '',
-    courseName: '',
-    description: '',
+    courseId: "",
+    courseName: "",
+    description: "",
     credit: 0,
-    instructor: '',
-    department: '',
-    startDate: '',
-    endDate: '',
-    schedule: ''
+    instructor: "",
+    department: "",
+    startDate: "",
+    endDate: "",
+    schedule: "",
   });
 
   const [errors, setErrors] = useState({});
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setNewCourse(prev => ({ ...prev, [name]: value }));
-    setErrors(prev => ({ ...prev, [name]: null }));
+    setNewCourse((prev) => ({ ...prev, [name]: value }));
+    setErrors((prev) => ({ ...prev, [name]: null }));
   };
 
   const handleSubmit = async (e) => {
@@ -27,21 +28,21 @@ const CreateCourseModal = ({ onClose, onCreate }) => {
       ...newCourse,
       credit: parseInt(newCourse.credit),
       startDate: formatDateForSubmit(newCourse.startDate),
-      endDate: formatDateForSubmit(newCourse.endDate)
+      endDate: formatDateForSubmit(newCourse.endDate),
     };
 
     const validationErrors = await onCreate(formattedCourse);
     if (validationErrors) {
       setErrors(validationErrors);
-      console.error('Validation errors:', errors);
+      console.error("Validation errors:", errors);
     } else {
       onClose();
     }
   };
 
   const formatDateForSubmit = (dateString) => {
-    if (!dateString) return '';
-    const [year, month, day] = dateString.split('-');
+    if (!dateString) return "";
+    const [year, month, day] = dateString.split("-");
     return `${day}-${month}-${year}`;
   };
 
@@ -54,15 +55,28 @@ const CreateCourseModal = ({ onClose, onCreate }) => {
             onClick={onClose}
             className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
           >
-            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+            <svg
+              className="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
         <form onSubmit={handleSubmit} className="p-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="mb-4">
-              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="courseId">
+              <label
+                className="block text-gray-700 text-sm font-bold mb-2"
+                htmlFor="courseId"
+              >
                 Course ID
               </label>
               <input
@@ -71,18 +85,17 @@ const CreateCourseModal = ({ onClose, onCreate }) => {
                 name="courseId"
                 value={newCourse.courseId}
                 onChange={handleChange}
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${
+                  errors.CourseId ? "border-red-500" : ""
+                }`}
               />
-              {errors.CourseId && Array.isArray(errors.CourseId) ? (
-                errors.CourseId.map((error, index) => (
-                  <p key={index} className="text-red-500 text-xs italic">{error}</p>
-                ))
-              ) : errors.CourseId ? (
-                <p className="text-red-500 text-xs italic">{errors.CourseId}</p>
-              ) : null}
+              <ValidationMessage errors={errors} field="CourseId" />
             </div>
             <div className="mb-4">
-              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="courseName">
+              <label
+                className="block text-gray-700 text-sm font-bold mb-2"
+                htmlFor="courseName"
+              >
                 Course Name
               </label>
               <input
@@ -91,12 +104,17 @@ const CreateCourseModal = ({ onClose, onCreate }) => {
                 name="courseName"
                 value={newCourse.courseName}
                 onChange={handleChange}
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${
+                  errors.CourseName ? "border-red-500" : ""
+                }`}
               />
-              {errors.CourseName && <p className="text-red-500 text-xs italic">{errors.CourseName}</p>}
+              <ValidationMessage errors={errors} field="CourseName" />
             </div>
             <div className="mb-4 col-span-2">
-              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="description">
+              <label
+                className="block text-gray-700 text-sm font-bold mb-2"
+                htmlFor="description"
+              >
                 Description
               </label>
               <textarea
@@ -104,12 +122,17 @@ const CreateCourseModal = ({ onClose, onCreate }) => {
                 name="description"
                 value={newCourse.description}
                 onChange={handleChange}
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${
+                  errors.Description ? "border-red-500" : ""
+                }`}
               />
-              {errors.Description && <p className="text-red-500 text-xs italic">{errors.Description}</p>}
+              <ValidationMessage errors={errors} field="Description" />
             </div>
             <div className="mb-4">
-              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="credit">
+              <label
+                className="block text-gray-700 text-sm font-bold mb-2"
+                htmlFor="credit"
+              >
                 Credit
               </label>
               <input
@@ -118,12 +141,17 @@ const CreateCourseModal = ({ onClose, onCreate }) => {
                 name="credit"
                 value={newCourse.credit}
                 onChange={handleChange}
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${
+                  errors.Credit ? "border-red-500" : ""
+                }`}
               />
-              {errors.Credit && <p className="text-red-500 text-xs italic">{errors.Credit}</p>}
+              <ValidationMessage errors={errors} field="Credit" />
             </div>
             <div className="mb-4">
-              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="instructor">
+              <label
+                className="block text-gray-700 text-sm font-bold mb-2"
+                htmlFor="instructor"
+              >
                 Instructor
               </label>
               <input
@@ -132,12 +160,17 @@ const CreateCourseModal = ({ onClose, onCreate }) => {
                 name="instructor"
                 value={newCourse.instructor}
                 onChange={handleChange}
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${
+                  errors.Instructor ? "border-red-500" : ""
+                }`}
               />
-              {errors.Instructor && <p className="text-red-500 text-xs italic">{errors.Instructor}</p>}
+              <ValidationMessage errors={errors} field="Instructor" />
             </div>
             <div className="mb-4">
-              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="department">
+              <label
+                className="block text-gray-700 text-sm font-bold mb-2"
+                htmlFor="department"
+              >
                 Department
               </label>
               <input
@@ -146,12 +179,17 @@ const CreateCourseModal = ({ onClose, onCreate }) => {
                 name="department"
                 value={newCourse.department}
                 onChange={handleChange}
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${
+                  errors.Department ? "border-red-500" : ""
+                }`}
               />
-              {errors.Department && <p className="text-red-500 text-xs italic">{errors.Department}</p>}
+              <ValidationMessage errors={errors} field="Department" />
             </div>
             <div className="mb-4">
-              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="startDate">
+              <label
+                className="block text-gray-700 text-sm font-bold mb-2"
+                htmlFor="startDate"
+              >
                 Start Date
               </label>
               <input
@@ -160,12 +198,17 @@ const CreateCourseModal = ({ onClose, onCreate }) => {
                 name="startDate"
                 value={newCourse.startDate}
                 onChange={handleChange}
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${
+                  errors.StartDate ? "border-red-500" : ""
+                }`}
               />
-              {errors.StartDate && <p className="text-red-500 text-xs italic">{errors.StartDate}</p>}
+              <ValidationMessage errors={errors} field="StartDate" />
             </div>
             <div className="mb-4">
-              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="endDate">
+              <label
+                className="block text-gray-700 text-sm font-bold mb-2"
+                htmlFor="endDate"
+              >
                 End Date
               </label>
               <input
@@ -174,12 +217,17 @@ const CreateCourseModal = ({ onClose, onCreate }) => {
                 name="endDate"
                 value={newCourse.endDate}
                 onChange={handleChange}
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${
+                  errors.EndDate ? "border-red-500" : ""
+                }`}
               />
-              {errors.EndDate && <p className="text-red-500 text-xs italic">{errors.EndDate}</p>}
+              <ValidationMessage errors={errors} field="EndDate" />
             </div>
             <div className="mb-4 col-span-2">
-              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="schedule">
+              <label
+                className="block text-gray-700 text-sm font-bold mb-2"
+                htmlFor="schedule"
+              >
                 Schedule
               </label>
               <input
@@ -188,9 +236,11 @@ const CreateCourseModal = ({ onClose, onCreate }) => {
                 name="schedule"
                 value={newCourse.schedule}
                 onChange={handleChange}
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${
+                  errors.Schedule ? "border-red-500" : ""
+                }`}
               />
-              {errors.Schedule && <p className="text-red-500 text-xs italic">{errors.Schedule}</p>}
+              <ValidationMessage errors={errors} field="Schedule" />
             </div>
           </div>
           <div className="flex items-center justify-end mt-4">

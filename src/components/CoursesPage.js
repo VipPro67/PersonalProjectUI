@@ -5,15 +5,15 @@ import CourseDetailsPopup from "./CourseDetailsPopup.js";
 import StudentsInCoursePopup from "./StudentsInCoursePopup";
 import CourseEditModal from "./CourseEditModal";
 import CreateCourseModal from "./CreateCourseModal.js";
+import { handleTokenError } from "../utils/tokenRefresh";
 
-const CoursesPage = ({ token }) => {
+const CoursesPage = ({ token, setToken }) => {
   const [courses, setCourses] = useState([]);
-  const [error, setError] = useState("");
+  const [notice, setNotice] = useState({ message: "", detail: "", type: "" });
   const [selectedCourseId, setSelectedCourseId] = useState(null);
-  const [selectedCourseForStudents, setSelectedCourseForStudents] = useState(null);
+  const [selectedCourseForStudents, setSelectedCourseForStudents] =
+    useState(null);
   const [editingCourse, setEditingCourse] = useState(null);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [courseToDelete, setCourseToDelete] = useState(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   // New state for query parameters
@@ -24,18 +24,23 @@ const CoursesPage = ({ token }) => {
     department: "",
     creditMin: "",
     creditMax: "",
-    schedule: ""
+    schedule: "",
   });
 
   const navigate = useNavigate();
   const location = useLocation();
+
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
-    const page = searchParams.get('page') || 1;
+    const page = searchParams.get("page") || 1;
     fetchCourses(page);
   }, [token, location.search]);
 
-  const fetchCourses = async (page) => {
+  const showNotice = (message, detail, type) => {
+    setNotice({ message, detail, type });
+    setTimeout(() => setNotice({ message: "", detail: "", type: "" }), 3000);
+  };
+  const fetchCourses = async () => {
     try {
       const response = await axios.get(
         `http://20.39.224.87:5000/api/courses${location.search}`,
@@ -46,23 +51,36 @@ const CoursesPage = ({ token }) => {
       setCourses(response.data.data);
     } catch (error) {
       console.log("Error fetching courses:", error);
-      if (error.response.status === 401) {
-        localStorage.removeItem('token');
-        navigate('/login');
-      }
-      else if (error.response.status === 404) {
-        setCourses([]);
-      }
-      else {
-        console.error("Error fetching courses:", error);
-        setError("Failed to fetch courses");
+      try {
+        await handleTokenError(error, navigate, setToken, async (newToken) => {
+          const retryResponse = await axios.get(
+            `http://20.39.224.87:5000/api/courses${location.search}`,
+            {
+              headers: { Authorization: `Bearer ${newToken}` },
+            }
+          );
+          setCourses(retryResponse.data.data);
+        });
+      } catch (finalError) {
+        if (finalError.response && finalError.response.status === 404) {
+          setCourses([]);
+        } else {
+          console.error("Error fetching courses:", finalError);
+          showNotice(
+            "Failed to fetch courses",
+            finalError.response
+              ? finalError.response.data.message
+              : "Unknown error",
+            "error"
+          );
+        }
       }
     }
   };
 
   const handleQueryChange = (e) => {
     const { name, value } = e.target;
-    setQueryParams(prev => ({ ...prev, [name]: value }));
+    setQueryParams((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleQuerySubmit = (e) => {
@@ -71,7 +89,7 @@ const CoursesPage = ({ token }) => {
     Object.entries(queryParams).forEach(([key, value]) => {
       if (value) searchParams.append(key, value);
     });
-    searchParams.append('page', '1');
+    searchParams.append("page", "1");
     navigate(`/courses?${searchParams.toString()}`);
   };
 
@@ -83,28 +101,28 @@ const CoursesPage = ({ token }) => {
     setSelectedCourseForStudents(courseId);
   };
   const handleEdit = (courseId) => {
-    const courseToEdit = courses.find(course => course.courseId === courseId);
+    const courseToEdit = courses.find((course) => course.courseId === courseId);
     setEditingCourse(courseToEdit);
   };
 
-  const handleDelete = (courseId) => {
-    setCourseToDelete(courseId);
-    setIsDeleteModalOpen(true);
-  };
-
-  const confirmDelete = async () => {
+  const handleDelete = async (courseId) => {
+    if (!window.confirm("Are you sure you want to delete this course?")) {
+      return;
+    }
     try {
-      await axios.delete(`http://20.39.224.87:5000/api/courses/${courseToDelete}`, {
+      await axios.delete(`http://20.39.224.87:5000/api/courses/${courseId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setCourses(courses.filter(course => course.courseId !== courseToDelete));
-      setIsDeleteModalOpen(false);
+      showNotice("Course deleted successfully", "success");
     } catch (error) {
       console.error("Error deleting course:", error);
-      setError("Failed to delete course");
+      showNotice(
+        "Failed to delete course",
+        error.response.data.message,
+        "error"
+      );
     }
   };
-
   const handleUpdateCourse = async (updatedCourse) => {
     try {
       const response = await axios.put(
@@ -114,20 +132,36 @@ const CoursesPage = ({ token }) => {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      setCourses(courses.map(course =>
-        course.courseId === updatedCourse.courseId ? response.data.data : course
-      ));
+      setCourses(
+        courses.map((course) =>
+          course.courseId === updatedCourse.courseId
+            ? response.data.data
+            : course
+        )
+      );
       setEditingCourse(null);
+      showNotice("Course updated successfully", null, "success");
     } catch (error) {
       console.error("Error updating course:", error);
-      setError("Failed to update course");
+      if (error.response && error.response.data && error.response.data.error) {
+        if (error.response.data.message == "Validation failed") {
+          return error.response.data.error;
+        }
+        showNotice(error.response.data.error, "error");
+      } else {
+        showNotice(
+          "An error occurred while creating the course",
+          error.response.data.message,
+          "error"
+        );
+      }
     }
   };
 
   const handleCreateCourse = async (newCourse) => {
     try {
       const response = await axios.post(
-        'http://20.39.224.87:5000/api/courses',
+        "http://20.39.224.87:5000/api/courses",
         newCourse,
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -135,32 +169,41 @@ const CoursesPage = ({ token }) => {
       );
       setCourses([...courses, response.data.data]);
       setIsCreateModalOpen(false);
+      showNotice("Course created successfully", null, "success");
     } catch (error) {
       console.error("Error creating course:", error);
       if (error.response && error.response.data && error.response.data.error) {
-        return error.response.data.error;
+        if (error.response.data.message == "Validation failed") {
+          return error.response.data.error;
+        }
+        showNotice(error.response.data.error, "error");
       } else {
-        return { general: "An error occurred while creating the course. Please try again." };
+        showNotice(
+          "An error occurred while creating the course",
+          error.response.data.message,
+          "error"
+        );
       }
     }
   };
-
-
-  if (error) {
-    return <div>Error: {error}</div>;
-  }
-
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Courses</h1>
-      <button
-        onClick={() => setIsCreateModalOpen(true)}
-        className="mb-4 bg-green-500 text-white px-4 py-2 rounded"
-      >
-        Create Course
-      </button>
-      <form onSubmit={handleQuerySubmit} className="mb-4 bg-gray-100 p-4 rounded">
+      <div className="container grid grid-cols-2">
+        <h1 className="text-2xl font-bold mb-4">Courses</h1>
+        <div className="flex justify-end">
+          <button
+            onClick={() => setIsCreateModalOpen(true)}
+            className="mb-4 bg-green-500 text-white px-4 py-2 rounded"
+          >
+            Create Course
+          </button>
+        </div>
+      </div>
 
+      <form
+        onSubmit={handleQuerySubmit}
+        className="mb-4 bg-gray-100 p-4 rounded"
+      >
         <div className="grid grid-cols-3 gap-4">
           <input
             type="text"
@@ -218,9 +261,11 @@ const CoursesPage = ({ token }) => {
             onChange={handleQueryChange}
             className="p-2 border rounded"
           />
-
         </div>
-        <button type="submit" className="mt-4 bg-blue-500 text-white px-4 py-2 rounded">
+        <button
+          type="submit"
+          className="mt-4 bg-blue-500 text-white px-4 py-2 rounded"
+        >
           Search
         </button>
       </form>
@@ -243,48 +288,63 @@ const CoursesPage = ({ token }) => {
           <tbody>
             {courses.map((course) => (
               <tr key={course.courseId} className="hover:bg-gray-50">
-                <td className="py-2 px-4 border-b">{course.courseId}</td>
-                <td className="py-2 px-4 border-b">{course.courseName}</td>
+                <td className="py-2 px-4 border-b text-center">
+                  {course.courseId}
+                </td>
+                <td className="py-2 px-4 border-b text-center">
+                  {course.courseName}
+                </td>
                 {/* <td className="py-2 px-4 border-b">{course.description}</td> */}
-                <td className="py-2 px-4 border-b">{course.credit}</td>
-                <td className="py-2 px-4 border-b">{course.instructor}</td>
-                <td className="py-2 px-4 border-b">{course.department}</td>
-                <td className="py-2 px-4 border-b">{course.startDate}</td>
-                <td className="py-2 px-4 border-b">{course.endDate}</td>
-                <td className="py-2 px-4 border-b">{course.schedule}</td>
-                <td className="py-2 px-4 border-b">
+                <td className="py-2 px-4 border-b text-center">
+                  {course.credit}
+                </td>
+                <td className="py-2 px-4 border-b text-center">
+                  {course.instructor}
+                </td>
+                <td className="py-2 px-4 border-b text-center">
+                  {course.department}
+                </td>
+                <td className="py-2 px-4 border-b text-center">
+                  {course.startDate}
+                </td>
+                <td className="py-2 px-4 border-b text-center">
+                  {course.endDate}
+                </td>
+                <td className="py-2 px-4 border-b text-center">
+                  {course.schedule}
+                </td>
+                <td className="py-2 px-4 border-b grid grid-cols-2">
                   <button
                     onClick={() => handleViewDetails(course.courseId)}
-                    className="bg-blue-500 text-white px-2 py-1 rounded mr-2"
+                    className="bg-blue-500 text-white p-1 m-1 rounded"
                   >
                     View
                   </button>
                   <button
                     onClick={() => handleViewStudents(course.courseId)}
-                    className="bg-blue-500 text-white px-2 py-1 rounded"
+                    className="bg-blue-500 text-white p-1 m-1 rounded"
                   >
                     Students
                   </button>
                   <button
                     onClick={() => handleEdit(course.courseId)}
-                    className="bg-green-500 text-white px-2 py-1 rounded"
+                    className="bg-green-500 text-white p-1 m-1 rounded"
                   >
                     Edit
                   </button>
                   <button
                     onClick={() => handleDelete(course.courseId)}
-                    className="bg-red-500 text-white px-2 py-1 rounded"
+                    className="bg-red-500 text-white p-1 m-1 rounded"
                   >
                     Delete
                   </button>
                 </td>
-
               </tr>
             ))}
           </tbody>
         </table>
       ) : (
-        <p>No courses found matching the query.</p>
+        <p>No courses found</p>
       )}
       {selectedCourseId && (
         <CourseDetailsPopup
@@ -309,41 +369,24 @@ const CoursesPage = ({ token }) => {
           onUpdate={handleUpdateCourse}
         />
       )}
-
-      {isDeleteModalOpen && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center">
-          <div className="bg-white p-5 rounded-lg">
-            <h2 className="text-xl mb-4">Confirm Deletion</h2>
-            <p>Are you sure you want to delete this course?</p>
-            <div className="mt-4 flex justify-end">
-              <button
-                onClick={() => setIsDeleteModalOpen(false)}
-                className="bg-gray-300 text-black px-4 py-2 rounded mr-2"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmDelete}
-                className="bg-red-500 text-white px-4 py-2 rounded"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {isCreateModalOpen && (
         <CreateCourseModal
           onClose={() => setIsCreateModalOpen(false)}
           onCreate={handleCreateCourse}
         />
       )}
+      {notice.message && (
+        <div
+          className={`fixed bottom-4 right-4 p-4 rounded-md shadow-md ${
+            notice.type === "success" ? "bg-green-500" : "bg-red-500"
+          } text-white`}
+        >
+          <p>{notice.message}</p>
+          <p>{notice.detail}</p>
+        </div>
+      )}
     </div>
   );
 };
 
 export default CoursesPage;
-
-
-

@@ -1,56 +1,51 @@
-import axios from "axios";
 import React, { useState, useEffect } from "react";
-
+import ValidationMessage from "./ValidationMessage";
 const StudentEditModal = ({ student, onClose, onUpdate, token }) => {
   const [formData, setFormData] = useState(student);
-  const [error, setError] = useState("");
+  const [errors, setErrors] = useState({});
 
   useEffect(() => {
-    // Format the date when the component mounts or when the student prop changes
     if (student.dateOfBirth) {
-      setFormData(prevState => ({
+      setFormData((prevState) => ({
         ...prevState,
-        dateOfBirth: formatDateForInput(student.dateOfBirth)
+        dateOfBirth: formatDateForInput(student.dateOfBirth),
       }));
     }
   }, [student]);
+
   const formatDateForInput = (dateString) => {
-    if (!dateString) return '';
-    const [day, month, year] = dateString.split('-');
-    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+    if (!dateString) return "";
+    const [day, month, year] = dateString.split("-");
+    return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
   };
 
   const formatDateForSubmit = (dateString) => {
-    if (!dateString) return '';
-    const [year, month, day] = dateString.split('-');
+    if (!dateString) return "";
+    const [year, month, day] = dateString.split("-");
     return `${day}-${month}-${year}`;
   };
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    // Clear the error for this field when it's changed
+    setErrors((prev) => ({ ...prev, [e.target.name]: "" }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    try {
-      const formattedData = {
-        ...formData,
-        dateOfBirth: formatDateForSubmit(formData.dateOfBirth)
-      };
-      const response = await axios.put(
-        `http://20.39.224.87:5000/api/students/${student.studentId}`,
-        formattedData,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      onUpdate(response.data.data);
+    const formattedStudent = {
+      ...formData,
+      grade: parseInt(formData.grade),
+      dateOfBirth: formatDateForSubmit(formData.dateOfBirth),
+    };
+    const validationErrors = await onUpdate(formattedStudent);
+    if (validationErrors) {
+      console.error("Validation errors:", validationErrors);
+      setErrors(validationErrors);
+    } else {
       onClose();
-    } catch (error) {
-      console.error("Error updating student:", error);
-      setError("Failed to update student.");
     }
   };
-
 
   return (
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center">
@@ -61,14 +56,27 @@ const StudentEditModal = ({ student, onClose, onUpdate, token }) => {
             onClick={onClose}
             className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
           >
-            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+            <svg
+              className="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
         <form onSubmit={handleSubmit} className="p-4">
           <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="fullName">
+            <label
+              className="block text-gray-700 text-sm font-bold mb-2"
+              htmlFor="fullName"
+            >
               Full Name
             </label>
             <input
@@ -77,11 +85,17 @@ const StudentEditModal = ({ student, onClose, onUpdate, token }) => {
               name="fullName"
               value={formData.fullName}
               onChange={handleChange}
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${
+                errors.FullName ? "border-red-500" : ""
+              }`}
             />
+            <ValidationMessage errors={errors} field="FullName" />
           </div>
           <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="email">
+            <label
+              className="block text-gray-700 text-sm font-bold mb-2"
+              htmlFor="email"
+            >
               Email
             </label>
             <input
@@ -90,11 +104,17 @@ const StudentEditModal = ({ student, onClose, onUpdate, token }) => {
               name="email"
               value={formData.email}
               onChange={handleChange}
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${
+                errors.Email ? "border-red-500" : ""
+              }`}
             />
+            <ValidationMessage errors={errors} field="Email" />
           </div>
           <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="phoneNumber">
+            <label
+              className="block text-gray-700 text-sm font-bold mb-2"
+              htmlFor="phoneNumber"
+            >
               Phone Number
             </label>
             <input
@@ -103,11 +123,17 @@ const StudentEditModal = ({ student, onClose, onUpdate, token }) => {
               name="phoneNumber"
               value={formData.phoneNumber}
               onChange={handleChange}
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${
+                errors.PhoneNumber ? "border-red-500" : ""
+              }`}
             />
+            <ValidationMessage errors={errors} field="PhoneNumber" />
           </div>
           <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="dateOfBirth">
+            <label
+              className="block text-gray-700 text-sm font-bold mb-2"
+              htmlFor="dateOfBirth"
+            >
               Date of Birth
             </label>
             <input
@@ -116,24 +142,17 @@ const StudentEditModal = ({ student, onClose, onUpdate, token }) => {
               name="dateOfBirth"
               value={formData.dateOfBirth}
               onChange={handleChange}
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${
+                errors.DateOfBirth ? "border-red-500" : ""
+              }`}
             />
+            <ValidationMessage errors={errors} field="DateOfBirth" />
           </div>
           <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="address">
-              Address
-            </label>
-            <input
-              type="text"
-              id="address"
-              name="address"
-              value={formData.address}
-              onChange={handleChange}
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="grade">
+            <label
+              className="block text-gray-700 text-sm font-bold mb-2"
+              htmlFor="grade"
+            >
               Grade
             </label>
             <input
@@ -142,10 +161,30 @@ const StudentEditModal = ({ student, onClose, onUpdate, token }) => {
               name="grade"
               value={formData.grade}
               onChange={handleChange}
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${
+                errors.Grade ? "border-red-500" : ""
+              }`}
             />
+            <ValidationMessage errors={errors} field="Grade" />
           </div>
-          {error && <p className="text-red-500 text-xs italic">{error}</p>}
+          <div className="mb-4">
+            <label
+              className="block text-gray-700 text-sm font-bold mb-2"
+              htmlFor="address"
+            >
+              Address
+            </label>
+            <textarea
+              id="address"
+              name="address"
+              value={formData.address}
+              onChange={handleChange}
+              className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${
+                errors.Address ? "border-red-500" : ""
+              }`}
+            ></textarea>
+            <ValidationMessage errors={errors} field="Address" />
+          </div>
           <div className="flex items-center justify-between">
             <button
               type="submit"
