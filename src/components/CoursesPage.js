@@ -113,7 +113,7 @@ const CoursesPage = ({ token, setToken }) => {
       await axios.delete(`http://20.39.224.87:5000/api/courses/${courseId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      showNotice("Course deleted successfully", "success");
+      showNotice("Course deleted successfully", null, "success");
     } catch (error) {
       console.error("Error deleting course:", error);
       showNotice(

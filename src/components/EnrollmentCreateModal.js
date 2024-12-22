@@ -66,10 +66,10 @@ const EnrollmentCreateModal = ({ onClose, onCreate }) => {
               value={newEnrollment.studentId}
               onChange={handleChange}
               className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${
-                errors.StudentId ? "border-red-500" : ""
+                errors.studentId ? "border-red-500" : ""
               }`}
             />
-            <ValidationMessage errors={errors} field="StudentId" />
+            <ValidationMessage errors={errors} field="studentId" />
           </div>
           <div className="mb-4">
             <label
@@ -85,10 +85,10 @@ const EnrollmentCreateModal = ({ onClose, onCreate }) => {
               value={newEnrollment.courseId}
               onChange={handleChange}
               className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${
-                errors.CourseId ? "border-red-500" : ""
+                errors.courseId ? "border-red-500" : ""
               }`}
             />
-            <ValidationMessage errors={errors} field="CourseId" />
+            <ValidationMessage errors={errors} field="courseId" />
           </div>
           <div className="flex items-center justify-end">
             <button

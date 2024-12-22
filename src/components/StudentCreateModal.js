@@ -115,10 +115,10 @@ const StudentCreateModal = ({ onClose, onCreate, token }) => {
               value={newStudent.phoneNumber}
               onChange={handleChange}
               className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${
-                errors.PhoneNumber ? "border-red-500" : ""
+                errors.phoneNumber ? "border-red-500" : ""
               }`}
             />
-            <ValidationMessage errors={errors} field="PhoneNumber" />
+            <ValidationMessage errors={errors} field="phoneNumber" />
           </div>
           <div className="mb-4">
             <label
@@ -134,14 +134,10 @@ const StudentCreateModal = ({ onClose, onCreate, token }) => {
               value={newStudent.dateOfBirth}
               onChange={handleChange}
               className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${
-                errors.DateOfBirth ? "border-red-500" : ""
+                errors.dateOfBirth ? "border-red-500" : ""
               }`}
             />
-            {errors.DateOfBirth && (
-              <p className="text-red-500 text-xs italic">
-                {errors.DateOfBirth}
-              </p>
-            )}
+            <ValidationMessage errors={errors} field="dateOfBirth" />
           </div>
           <div className="mb-4">
             <label
@@ -157,10 +153,10 @@ const StudentCreateModal = ({ onClose, onCreate, token }) => {
               value={newStudent.grade}
               onChange={handleChange}
               className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${
-                errors.Grade ? "border-red-500" : ""
+                errors.grade ? "border-red-500" : ""
               }`}
             />
-            <ValidationMessage errors={errors} field="Grade" />
+            <ValidationMessage errors={errors} field="grade" />
           </div>
           <div className="mb-4">
             <label
@@ -176,10 +172,10 @@ const StudentCreateModal = ({ onClose, onCreate, token }) => {
               value={newStudent.address}
               onChange={handleChange}
               className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${
-                errors.Address ? "border-red-500" : ""
+                errors.address ? "border-red-500" : ""
               }`}
             />
-            <ValidationMessage errors={errors} field="Address" />
+            <ValidationMessage errors={errors} field="address" />
           </div>
 
           <div className="flex items-center justify-between">

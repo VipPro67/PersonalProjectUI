@@ -158,11 +158,11 @@ const StudentPage = ({ token, setToken }) => {
       if (error.response && error.response.status === 401) {
         localStorage.removeItem("token");
         navigate("/login");
-      } else if (error.response && error.response.status === 400) {
-        if (error.response.data.message === "Validation failed") {
-          return error.response.data.error;
-        }
       }
+      if (error.response.data.message === "Validation failed") {
+        return error.response.data.error;
+      }
+
       setNotification({
         message: "Failed to update student",
         detail: error.response.data.message,
@@ -190,11 +190,11 @@ const StudentPage = ({ token, setToken }) => {
       if (error.response && error.response.status === 401) {
         localStorage.removeItem("token");
         navigate("/login");
-      } else if (error.response && error.response.status === 400) {
-        if (error.response.data.message === "Validation failed") {
-          return error.response.data.error;
-        }
       }
+      if (error.response.data.message === "Validation failed") {
+        return error.response.data.error;
+      }
+
       setNotification({
         message: "Failed to create student",
         detail: error.response.data.message,

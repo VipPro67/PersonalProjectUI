@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
+import ValidationMessage from "./ValidationMessage";
 
 const Login = ({ setToken }) => {
   const [username, setUsername] = useState("");
@@ -101,15 +102,7 @@ const Login = ({ setToken }) => {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
               />
-              {errors.UserName &&
-                errors.UserName.map((error, index) => (
-                  <p
-                    key={`username-${index}`}
-                    className="text-red-500 text-xs italic mt-1 p-2"
-                  >
-                    {error}
-                  </p>
-                ))}
+              <ValidationMessage errors={errors} field="username" />
             </div>
             <div>
               <label htmlFor="password" className="sr-only">
@@ -124,15 +117,7 @@ const Login = ({ setToken }) => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
-              {errors.Password &&
-                errors.Password.map((error, index) => (
-                  <p
-                    key={`password-${index}`}
-                    className="text-red-500 text-xs italic mt-1 p-2"
-                  >
-                    {error}
-                  </p>
-                ))}
+              <ValidationMessage errors={errors} field="password" />
             </div>
           </div>
 

@@ -86,10 +86,10 @@ const CreateCourseModal = ({ onClose, onCreate }) => {
                 value={newCourse.courseId}
                 onChange={handleChange}
                 className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${
-                  errors.CourseId ? "border-red-500" : ""
+                  errors.courseId ? "border-red-500" : ""
                 }`}
               />
-              <ValidationMessage errors={errors} field="CourseId" />
+              <ValidationMessage errors={errors} field="courseId" />
             </div>
             <div className="mb-4">
               <label
@@ -105,10 +105,10 @@ const CreateCourseModal = ({ onClose, onCreate }) => {
                 value={newCourse.courseName}
                 onChange={handleChange}
                 className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${
-                  errors.CourseName ? "border-red-500" : ""
+                  errors.courseName ? "border-red-500" : ""
                 }`}
               />
-              <ValidationMessage errors={errors} field="CourseName" />
+              <ValidationMessage errors={errors} field="courseName" />
             </div>
             <div className="mb-4 col-span-2">
               <label
@@ -123,10 +123,10 @@ const CreateCourseModal = ({ onClose, onCreate }) => {
                 value={newCourse.description}
                 onChange={handleChange}
                 className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${
-                  errors.Description ? "border-red-500" : ""
+                  errors.description ? "border-red-500" : ""
                 }`}
               />
-              <ValidationMessage errors={errors} field="Description" />
+              <ValidationMessage errors={errors} field="description" />
             </div>
             <div className="mb-4">
               <label
@@ -142,10 +142,10 @@ const CreateCourseModal = ({ onClose, onCreate }) => {
                 value={newCourse.credit}
                 onChange={handleChange}
                 className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${
-                  errors.Credit ? "border-red-500" : ""
+                  errors.credit ? "border-red-500" : ""
                 }`}
               />
-              <ValidationMessage errors={errors} field="Credit" />
+              <ValidationMessage errors={errors} field="credit" />
             </div>
             <div className="mb-4">
               <label
@@ -161,10 +161,10 @@ const CreateCourseModal = ({ onClose, onCreate }) => {
                 value={newCourse.instructor}
                 onChange={handleChange}
                 className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${
-                  errors.Instructor ? "border-red-500" : ""
+                  errors.instructor ? "border-red-500" : ""
                 }`}
               />
-              <ValidationMessage errors={errors} field="Instructor" />
+              <ValidationMessage errors={errors} field="instructor" />
             </div>
             <div className="mb-4">
               <label
@@ -180,10 +180,10 @@ const CreateCourseModal = ({ onClose, onCreate }) => {
                 value={newCourse.department}
                 onChange={handleChange}
                 className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${
-                  errors.Department ? "border-red-500" : ""
+                  errors.department ? "border-red-500" : ""
                 }`}
               />
-              <ValidationMessage errors={errors} field="Department" />
+              <ValidationMessage errors={errors} field="department" />
             </div>
             <div className="mb-4">
               <label
@@ -199,10 +199,10 @@ const CreateCourseModal = ({ onClose, onCreate }) => {
                 value={newCourse.startDate}
                 onChange={handleChange}
                 className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${
-                  errors.StartDate ? "border-red-500" : ""
+                  errors.startDate ? "border-red-500" : ""
                 }`}
               />
-              <ValidationMessage errors={errors} field="StartDate" />
+              <ValidationMessage errors={errors} field="startDate" />
             </div>
             <div className="mb-4">
               <label
@@ -218,10 +218,10 @@ const CreateCourseModal = ({ onClose, onCreate }) => {
                 value={newCourse.endDate}
                 onChange={handleChange}
                 className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${
-                  errors.EndDate ? "border-red-500" : ""
+                  errors.endDate ? "border-red-500" : ""
                 }`}
               />
-              <ValidationMessage errors={errors} field="EndDate" />
+              <ValidationMessage errors={errors} field="endDate" />
             </div>
             <div className="mb-4 col-span-2">
               <label
@@ -237,10 +237,10 @@ const CreateCourseModal = ({ onClose, onCreate }) => {
                 value={newCourse.schedule}
                 onChange={handleChange}
                 className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${
-                  errors.Schedule ? "border-red-500" : ""
+                  errors.schedule ? "border-red-500" : ""
                 }`}
               />
-              <ValidationMessage errors={errors} field="Schedule" />
+              <ValidationMessage errors={errors} field="schedule" />
             </div>
           </div>
           <div className="flex items-center justify-end mt-4">

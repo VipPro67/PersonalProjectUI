@@ -86,10 +86,10 @@ const StudentEditModal = ({ student, onClose, onUpdate, token }) => {
               value={formData.fullName}
               onChange={handleChange}
               className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${
-                errors.FullName ? "border-red-500" : ""
+                errors.fullName ? "border-red-500" : ""
               }`}
             />
-            <ValidationMessage errors={errors} field="FullName" />
+            <ValidationMessage errors={errors} field="fullName" />
           </div>
           <div className="mb-4">
             <label
@@ -105,10 +105,10 @@ const StudentEditModal = ({ student, onClose, onUpdate, token }) => {
               value={formData.email}
               onChange={handleChange}
               className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${
-                errors.Email ? "border-red-500" : ""
+                errors.email ? "border-red-500" : ""
               }`}
             />
-            <ValidationMessage errors={errors} field="Email" />
+            <ValidationMessage errors={errors} field="email" />
           </div>
           <div className="mb-4">
             <label
@@ -124,10 +124,10 @@ const StudentEditModal = ({ student, onClose, onUpdate, token }) => {
               value={formData.phoneNumber}
               onChange={handleChange}
               className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${
-                errors.PhoneNumber ? "border-red-500" : ""
+                errors.phoneNumber ? "border-red-500" : ""
               }`}
             />
-            <ValidationMessage errors={errors} field="PhoneNumber" />
+            <ValidationMessage errors={errors} field="phoneNumber" />
           </div>
           <div className="mb-4">
             <label
@@ -143,10 +143,10 @@ const StudentEditModal = ({ student, onClose, onUpdate, token }) => {
               value={formData.dateOfBirth}
               onChange={handleChange}
               className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${
-                errors.DateOfBirth ? "border-red-500" : ""
+                errors.dateOfBirth ? "border-red-500" : ""
               }`}
             />
-            <ValidationMessage errors={errors} field="DateOfBirth" />
+            <ValidationMessage errors={errors} field="dateOfBirth" />
           </div>
           <div className="mb-4">
             <label
@@ -162,10 +162,10 @@ const StudentEditModal = ({ student, onClose, onUpdate, token }) => {
               value={formData.grade}
               onChange={handleChange}
               className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${
-                errors.Grade ? "border-red-500" : ""
+                errors.grade ? "border-red-500" : ""
               }`}
             />
-            <ValidationMessage errors={errors} field="Grade" />
+            <ValidationMessage errors={errors} field="grade" />
           </div>
           <div className="mb-4">
             <label
@@ -180,10 +180,10 @@ const StudentEditModal = ({ student, onClose, onUpdate, token }) => {
               value={formData.address}
               onChange={handleChange}
               className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${
-                errors.Address ? "border-red-500" : ""
+                errors.address ? "border-red-500" : ""
               }`}
             ></textarea>
-            <ValidationMessage errors={errors} field="Address" />
+            <ValidationMessage errors={errors} field="address" />
           </div>
           <div className="flex items-center justify-between">
             <button
