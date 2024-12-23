@@ -144,7 +144,7 @@ const CoursesPage = ({ token, setToken }) => {
     } catch (error) {
       console.error("Error updating course:", error);
       if (error.response && error.response.data && error.response.data.error) {
-        if (error.response.data.message == "Validation failed") {
+        if (error.response.data.message === "Validation failed") {
           return error.response.data.error;
         }
         showNotice(error.response.data.error, "error");
@@ -173,7 +173,7 @@ const CoursesPage = ({ token, setToken }) => {
     } catch (error) {
       console.error("Error creating course:", error);
       if (error.response && error.response.data && error.response.data.error) {
-        if (error.response.data.message == "Validation failed") {
+        if (error.response.data.message === "Validation failed") {
           return error.response.data.error;
         }
         showNotice(error.response.data.error, "error");

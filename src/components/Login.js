@@ -7,6 +7,7 @@ const Login = ({ setToken }) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState({});
+  const [language, setLanguage] = useState(localStorage.getItem("acceptLanguage") || "en-US");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -20,6 +21,7 @@ const Login = ({ setToken }) => {
       }
     }
   }, [navigate]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrors({});
@@ -34,6 +36,7 @@ const Login = ({ setToken }) => {
           headers: {
             Accept: "application/json",
             "Content-Type": "application/json",
+            "Accept-Language": language, // Include the selected language in the request header
           },
         }
       );
@@ -57,6 +60,7 @@ const Login = ({ setToken }) => {
         const { data } = error.response;
         if (data.status === 400 && data.error) {
           setErrors(data.error);
+          console.log(errors);
         } else if (data.status === 401) {
           setErrors({
             general: data.error || "Username or password is invalid.",
@@ -77,8 +81,29 @@ const Login = ({ setToken }) => {
     }
   };
 
+  const handleLanguageChange = (e) => {
+    const selectedLanguage = e.target.value;
+    setLanguage(selectedLanguage);
+    localStorage.setItem("acceptLanguage", selectedLanguage); // Save the selected language to localStorage
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="absolute top-4 right-4">
+        <label htmlFor="language" className="block text-sm font-medium text-gray-700">
+          Language
+        </label>
+        <select
+          id="language"
+          name="language"
+          value={language}
+          onChange={handleLanguageChange}
+          className="mt-1 block w-24 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+        >
+          <option value="en-US">EN</option>
+          <option value="vi-VN">VI</option>
+        </select>
+      </div>
       <div className="max-w-md w-full space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
@@ -102,7 +127,7 @@ const Login = ({ setToken }) => {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
               />
-              <ValidationMessage errors={errors} field="username" />
+              <ValidationMessage errors={errors} field="userName" />
             </div>
             <div>
               <label htmlFor="password" className="sr-only">
@@ -138,7 +163,10 @@ const Login = ({ setToken }) => {
               Sign in
             </button>
           </div>
-          <div className="text-center">
+
+
+
+          <div className="text-center mt-4">
             <Link
               to="/register"
               className="font-medium text-indigo-600 hover:text-indigo-500"

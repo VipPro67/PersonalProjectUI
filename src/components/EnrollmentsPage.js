@@ -7,7 +7,6 @@ import { handleTokenError } from "../utils/tokenRefresh";
 const EnrollmentsPage = ({ token, setToken }) => {
   const [enrollments, setEnrollments] = useState([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [error, setError] = useState("");
   const [notification, setNotification] = useState({
     message: "",
     detail: "",
@@ -161,11 +160,7 @@ const EnrollmentsPage = ({ token, setToken }) => {
     });
     navigate(`/enrollments?${searchParams.toString()}`);
   };
-  if (error) {
-    return <div>Error: {error}</div>;
-  }
-
-  return (
+    return (
     <div className="container mx-auto p-4">
       <div className="container grid grid-cols-2">
         <h1 className="text-2xl font-bold mb-4">Enrollments</h1>

@@ -80,7 +80,7 @@ function App() {
             )
           }
         />
-        <Route path="/" element={<Navigate to="/courses" />} />
+        <Route path="*" element={<Navigate to="/courses" />} />
       </Routes>
     </Router>
   );
