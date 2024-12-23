@@ -27,7 +27,6 @@ const StudentEditModal = ({ student, onClose, onUpdate, token }) => {
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-    // Clear the error for this field when it's changed
     setErrors((prev) => ({ ...prev, [e.target.name]: "" }));
   };
 

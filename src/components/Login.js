@@ -11,12 +11,10 @@ const Login = ({ setToken }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if there's a token in localStorage
-    const auth = localStorage.getItem("auth");
+    const auth = localStorage.getItem("accessToken");
     if (auth) {
       const { accessToken } = JSON.parse(auth);
       if (accessToken) {
-        // If there's a token, redirect to the courses page
         navigate("/courses");
       }
     }

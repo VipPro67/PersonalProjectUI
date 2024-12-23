@@ -15,7 +15,6 @@ const StudentPage = ({ token, setToken }) => {
   const [notification, setNotification] = useState({ message: "", type: "" });
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
-  // Add these new state variables for query parameters
   const [query, setQuery] = useState({
     studentName: "",
     email: "",

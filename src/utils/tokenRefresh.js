@@ -2,14 +2,12 @@ import axios from "axios";
 
 export const refreshToken = async (navigate, setToken) => {
   try {
-    const auth = JSON.parse(localStorage.getItem("auth"));
-    if (!auth || !auth.refreshToken) {
-      throw new Error("No refresh token available");
-    }
+    const rftoken = JSON.parse(localStorage.getItem("refreshToken"));
+    
 
     const response = await axios.post(
       "http://20.39.224.87:5000/api/auth/refresh",
-      { refreshToken: auth.refreshToken }
+      { refreshToken: rftoken }
     );
     const newTokens = {
       accessToken: response.data.accessToken,

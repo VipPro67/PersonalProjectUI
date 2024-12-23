@@ -6,8 +6,9 @@ import {
   Navigate,
 } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
+import axios from "axios";
 import Login from "./components/Login";
-import Register from "./components/Register"; // Add this line
+import Register from "./components/Register";
 import Navbar from "./components/Navbar";
 import CoursesPage from "./components/CoursesPage";
 import StudentsPage from "./components/StudentsPage";
@@ -15,10 +16,10 @@ import EnrollmentsPage from "./components/EnrollmentsPage";
 
 function App() {
   const [auth, setAuth] = useState(() => {
-    const savedAuth = localStorage.getItem("auth");
-    return savedAuth ? JSON.parse(savedAuth) : {};
+    const accessToken = localStorage.getItem("accessToken");
+    const refreshToken = localStorage.getItem("refreshToken");
+    return { accessToken, refreshToken };
   });
-
   const [username, setUsername] = useState("");
 
   useEffect(() => {
@@ -34,19 +35,46 @@ function App() {
       setUsername("");
     }
   }, [auth.accessToken]);
+
   const setToken = (tokens) => {
     setAuth(tokens);
-    localStorage.setItem("auth", JSON.stringify(tokens));
+    localStorage.setItem("accessToken", tokens.accessToken);
+    localStorage.setItem("refreshToken", tokens.refreshToken);
   };
 
-  const logout = () => {
+  const logoutThisDevice = () => {
     setAuth({});
-    localStorage.removeItem("auth");
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+  };
+
+  const logoutAllDevices = async () => {
+    try {
+      await axios.post(
+        `http://20.39.224.87:5000/api/auth/logout`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${auth.accessToken}` },
+        }
+      );
+      logoutThisDevice(); 
+    } catch (error) {
+      console.error("Error logging out from all devices:", error);
+      if (error.response && error.response.status === 401) {
+        logoutThisDevice(); 
+      }
+    }
   };
 
   return (
     <Router>
-      {auth.accessToken && <Navbar logout={logout} username={username} />}
+      {auth.accessToken && (
+        <Navbar
+          logoutThisDevice={logoutThisDevice}
+          logoutAllDevices={logoutAllDevices}
+          username={username}
+        />
+      )}
       <Routes>
         <Route path="/login" element={<Login setToken={setToken} />} />
         <Route path="/register" element={<Register />} />
@@ -87,3 +115,4 @@ function App() {
 }
 
 export default App;
+

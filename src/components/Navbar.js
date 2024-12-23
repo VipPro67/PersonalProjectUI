@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 
-const Navbar = ({ logout, username }) => {
+const Navbar = ({ logoutThisDevice, logoutAllDevices, username }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const toggleDropdown = () => {
@@ -31,10 +31,16 @@ const Navbar = ({ logout, username }) => {
             {dropdownOpen && (
               <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1">
                 <button
-                  onClick={logout}
+                  onClick={logoutThisDevice}
                   className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
                 >
-                  Logout
+                  Logout This Device
+                </button>
+                <button
+                onClick={logoutAllDevices}
+                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                >
+                  Logout All Devices
                 </button>
               </div>
             )}

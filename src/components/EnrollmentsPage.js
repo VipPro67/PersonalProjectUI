@@ -127,7 +127,6 @@ const EnrollmentsPage = ({ token, setToken }) => {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
-        // Refresh the enrollments list after successful deletion
         fetchEnrollments(query);
         setNotification({
           message: "Enrollment deleted successfully",
