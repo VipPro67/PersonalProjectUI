@@ -1,18 +1,16 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import axiosInstance from "../utils/axiosConfig.js";
 import { useNavigate, useLocation } from "react-router-dom";
 import CourseDetailsPopup from "./CourseDetailsPopup.js";
 import StudentsInCoursePopup from "./StudentsInCoursePopup";
 import CourseEditModal from "./CourseEditModal";
 import CreateCourseModal from "./CreateCourseModal.js";
-import { handleTokenError } from "../utils/tokenRefresh";
 
-const CoursesPage = ({ token, setToken }) => {
+const CoursesPage = () => {
   const [courses, setCourses] = useState([]);
   const [notice, setNotice] = useState({ message: "", detail: "", type: "" });
   const [selectedCourseId, setSelectedCourseId] = useState(null);
-  const [selectedCourseForStudents, setSelectedCourseForStudents] =
-    useState(null);
+  const [selectedCourseForStudents, setSelectedCourseForStudents] = useState(null);
   const [editingCourse, setEditingCourse] = useState(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
@@ -34,7 +32,7 @@ const CoursesPage = ({ token, setToken }) => {
     const searchParams = new URLSearchParams(location.search);
     const page = searchParams.get("page") || 1;
     fetchCourses(page);
-  }, [token, location.search]);
+  }, [location.search]);
 
   const showNotice = (message, detail, type) => {
     setNotice({ message, detail, type });
@@ -42,41 +40,27 @@ const CoursesPage = ({ token, setToken }) => {
   };
   const fetchCourses = async () => {
     try {
-      const response = await axios.get(
-        `http://20.39.224.87:5000/api/courses${location.search}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+      const response = await axiosInstance.get(
+        `/courses${location.search}`,
       );
       setCourses(response.data.data);
     } catch (error) {
       console.log("Error fetching courses:", error);
-      try {
-        await handleTokenError(error, navigate, setToken, async (newToken) => {
-          const retryResponse = await axios.get(
-            `http://20.39.224.87:5000/api/courses${location.search}`,
-            {
-              headers: { Authorization: `Bearer ${newToken}` },
-            }
-          );
-          setCourses(retryResponse.data.data);
-        });
-      } catch (finalError) {
-        if (finalError.response && finalError.response.status === 404) {
-          setCourses([]);
-        } else {
-          console.error("Error fetching courses:", finalError);
-          showNotice(
-            "Failed to fetch courses",
-            finalError.response
-              ? finalError.response.data.message
-              : "Unknown error",
-            "error"
-          );
-        }
+      if (error.response && error.response.status === 404) {
+        setCourses([]);
+      } else {
+        console.error("Error fetching courses:", error);
+        showNotice(
+          "Failed to fetch courses",
+          error.response
+            ? error.response.data.message
+            : "Unknown error",
+          "error"
+        );
       }
     }
-  };
+  }
+
 
   const handleQueryChange = (e) => {
     const { name, value } = e.target;
@@ -90,6 +74,7 @@ const CoursesPage = ({ token, setToken }) => {
       if (value) searchParams.append(key, value);
     });
     searchParams.append("page", "1");
+    searchParams.append("itemsPerPage", "10");
     navigate(`/courses?${searchParams.toString()}`);
   };
 
@@ -110,9 +95,7 @@ const CoursesPage = ({ token, setToken }) => {
       return;
     }
     try {
-      await axios.delete(`http://20.39.224.87:5000/api/courses/${courseId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axiosInstance.delete(`/courses/${courseId}`);
       showNotice("Course deleted successfully", null, "success");
     } catch (error) {
       console.error("Error deleting course:", error);
@@ -125,13 +108,9 @@ const CoursesPage = ({ token, setToken }) => {
   };
   const handleUpdateCourse = async (updatedCourse) => {
     try {
-      const response = await axios.put(
-        `http://20.39.224.87:5000/api/courses/${updatedCourse.courseId}`,
-        updatedCourse,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const response = await axiosInstance.put(
+        `/courses/${updatedCourse.courseId}`,
+        updatedCourse);
       setCourses(
         courses.map((course) =>
           course.courseId === updatedCourse.courseId
@@ -160,13 +139,9 @@ const CoursesPage = ({ token, setToken }) => {
 
   const handleCreateCourse = async (newCourse) => {
     try {
-      const response = await axios.post(
-        "http://20.39.224.87:5000/api/courses",
-        newCourse,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const response = await axiosInstance.post(
+        "/courses",
+        newCourse);
       setCourses([...courses, response.data.data]);
       setIsCreateModalOpen(false);
       showNotice("Course created successfully", null, "success");
@@ -311,8 +286,8 @@ const CoursesPage = ({ token, setToken }) => {
                   {course.endDate}
                 </td>
                 <td className="py-2 px-4 border-b text-center">
-                <span dangerouslySetInnerHTML={{ __html: course.schedule }}></span>
-                                </td>
+                  <span dangerouslySetInnerHTML={{ __html: course.schedule }}></span>
+                </td>
                 <td className="py-2 px-4 border-b grid grid-cols-2">
                   <button
                     onClick={() => handleViewDetails(course.courseId)}
@@ -349,7 +324,6 @@ const CoursesPage = ({ token, setToken }) => {
       {selectedCourseId && (
         <CourseDetailsPopup
           courseId={selectedCourseId}
-          token={token}
           onClose={() => setSelectedCourseId(null)}
         />
       )}
@@ -357,7 +331,6 @@ const CoursesPage = ({ token, setToken }) => {
       {selectedCourseForStudents && (
         <StudentsInCoursePopup
           courseId={selectedCourseForStudents}
-          token={token}
           onClose={() => setSelectedCourseForStudents(null)}
         />
       )}
@@ -377,9 +350,8 @@ const CoursesPage = ({ token, setToken }) => {
       )}
       {notice.message && (
         <div
-          className={`fixed bottom-4 right-4 p-4 rounded-md shadow-md ${
-            notice.type === "success" ? "bg-green-500" : "bg-red-500"
-          } text-white`}
+          className={`fixed bottom-4 right-4 p-4 rounded-md shadow-md ${notice.type === "success" ? "bg-green-500" : "bg-red-500"
+            } text-white`}
         >
           <p>{notice.message}</p>
           <p>{notice.detail}</p>

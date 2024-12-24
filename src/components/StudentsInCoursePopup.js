@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import axiosInstance from "../utils/axiosConfig";
 
 const StudentsInCoursePopup = ({ courseId, token, onClose }) => {
   const [students, setStudents] = useState([]);
@@ -9,11 +9,8 @@ const StudentsInCoursePopup = ({ courseId, token, onClose }) => {
   useEffect(() => {
     const fetchStudents = async () => {
       try {
-        const response = await axios.get(
-          `http://20.39.224.87:5000/api/courses/${courseId}/students`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
+        const response = await axiosInstance.get(
+          `/courses/${courseId}/students`
         );
         if (response.data.status == 200) {
           setStudents(response.data.data);

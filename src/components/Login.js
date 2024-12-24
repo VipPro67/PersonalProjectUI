@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import axios from "axios"
 import { useNavigate, Link } from "react-router-dom";
 import ValidationMessage from "./ValidationMessage";
 
-const Login = ({ setToken }) => {
+const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState({});
@@ -11,12 +11,9 @@ const Login = ({ setToken }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const auth = localStorage.getItem("accessToken");
-    if (auth) {
-      const { accessToken } = JSON.parse(auth);
-      if (accessToken) {
-        navigate("/courses");
-      }
+    const accessToken = localStorage.getItem("accessToken");
+    if (accessToken) {
+      navigate("/courses");
     }
   }, [navigate]);
 
@@ -34,19 +31,18 @@ const Login = ({ setToken }) => {
           headers: {
             Accept: "application/json",
             "Content-Type": "application/json",
-            "Accept-Language": language, // Include the selected language in the request header
+            "Accept-Language": language ? language : "en-US", // Include selected language in headers
           },
         }
       );
-
       if (response.data.status === 200) {
         // Store both access token and refresh token
         const tokens = {
           accessToken: response.data.data.accessToken,
           refreshToken: response.data.data.refreshToken,
         };
-        setToken(tokens);
-        localStorage.setItem("auth", JSON.stringify(tokens));
+        localStorage.setItem("accessToken", tokens.accessToken);
+        localStorage.setItem("refreshToken", tokens.refreshToken);
         navigate("/courses");
       } else {
         setErrors({

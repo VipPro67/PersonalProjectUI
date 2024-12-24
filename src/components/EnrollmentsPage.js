@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import axiosInstance from "../utils/axiosConfig";
 import { useNavigate, useLocation } from "react-router-dom";
 import EnrollmentCreateModal from "./EnrollmentCreateModal";
-import { handleTokenError } from "../utils/tokenRefresh";
 
-const EnrollmentsPage = ({ token, setToken }) => {
+const EnrollmentsPage = () => {
   const [enrollments, setEnrollments] = useState([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [notification, setNotification] = useState({
@@ -36,7 +35,7 @@ const EnrollmentsPage = ({ token, setToken }) => {
     });
 
     fetchEnrollments({ courseId, studentId, page, itemsPerPage });
-  }, [token, location.search]);
+  }, [location.search]);
 
   const fetchEnrollments = async ({
     courseId,
@@ -45,38 +44,21 @@ const EnrollmentsPage = ({ token, setToken }) => {
     itemsPerPage,
   }) => {
     try {
-      const response = await axios.get(
-        `http://20.39.224.87:5000/api/enrollments?courseId=${courseId}&studentId=${studentId}&page=${page}&itemsPerPage=${itemsPerPage}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const response = await axiosInstance.get(
+        `/enrollments?courseId=${courseId}&studentId=${studentId}&page=${page}&itemsPerPage=${itemsPerPage}`);
       setEnrollments(response.data.data);
     } catch (error) {
-      console.log("Error fetching enrollments:", error);
-      try {
-        await handleTokenError(error, navigate, setToken, async (newToken) => {
-          const retryResponse = await axios.get(
-            `http://20.39.224.87:5000/api/enrollments${location.search}`,
-            {
-              headers: { Authorization: `Bearer ${newToken}` },
-            }
-          );
-          setEnrollments(retryResponse.data.data);
+      if (error.response && error.response.status === 404) {
+        setEnrollments([]);
+      } else {
+        console.error("Error fetching enrollments:", error);
+        setNotification({
+          message: "Failed to fetch enrollments",
+          detail: error.response
+            ? error.response.data.message
+            : "Unknown error",
+          type: "error",
         });
-      } catch (finalError) {
-        if (finalError.response && finalError.response.status === 404) {
-          setEnrollments([]);
-        } else {
-          console.error("Error fetching enrollments:", finalError);
-          setNotification({
-            message: "Failed to fetch enrollments",
-            detail: finalError.response
-              ? finalError.response.data.message
-              : "Unknown error",
-            type: "error",
-          });
-        }
       }
     }
   };
@@ -91,13 +73,9 @@ const EnrollmentsPage = ({ token, setToken }) => {
 
   const createEnrollment = async (newEnrollment) => {
     try {
-      const response = await axios.post(
-        "http://20.39.224.87:5000/api/enrollments",
-        newEnrollment,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const response = await axiosInstance.post(
+        "/enrollments",
+        newEnrollment);
       fetchEnrollments(query);
       setIsCreateModalOpen(false);
       setNotification({
@@ -121,12 +99,8 @@ const EnrollmentsPage = ({ token, setToken }) => {
   const handleDelete = async (enrollmentId) => {
     if (window.confirm("Are you sure you want to delete this enrollment?")) {
       try {
-        await axios.delete(
-          `http://20.39.224.87:5000/api/enrollments/${enrollmentId}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+        await axiosInstance.delete(
+          `/enrollments/${enrollmentId}`);
         fetchEnrollments(query);
         setNotification({
           message: "Enrollment deleted successfully",
@@ -159,7 +133,7 @@ const EnrollmentsPage = ({ token, setToken }) => {
     });
     navigate(`/enrollments?${searchParams.toString()}`);
   };
-    return (
+  return (
     <div className="container mx-auto p-4">
       <div className="container grid grid-cols-2">
         <h1 className="text-2xl font-bold mb-4">Enrollments</h1>
@@ -253,9 +227,8 @@ const EnrollmentsPage = ({ token, setToken }) => {
       )}
       {notification.message && (
         <div
-          className={`fixed bottom-4 right-4 p-4 rounded-md shadow-md ${
-            notification.type === "success" ? "bg-green-500" : "bg-red-500"
-          } text-white`}
+          className={`fixed bottom-4 right-4 p-4 rounded-md shadow-md ${notification.type === "success" ? "bg-green-500" : "bg-red-500"
+            } text-white`}
         >
           <p>{notification.message}</p>
           <p>{notification.detail}</p>

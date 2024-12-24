@@ -6,26 +6,24 @@ import {
   Navigate,
 } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
-import axios from "axios";
 import Login from "./components/Login";
 import Register from "./components/Register";
 import Navbar from "./components/Navbar";
 import CoursesPage from "./components/CoursesPage";
 import StudentsPage from "./components/StudentsPage";
 import EnrollmentsPage from "./components/EnrollmentsPage";
+import axiosInstance from "./utils/axiosConfig";
 
 function App() {
-  const [auth, setAuth] = useState(() => {
-    const accessToken = localStorage.getItem("accessToken");
-    const refreshToken = localStorage.getItem("refreshToken");
-    return { accessToken, refreshToken };
-  });
   const [username, setUsername] = useState("");
+  const [accessToken, setAccessToken] = useState("");
 
   useEffect(() => {
-    if (auth.accessToken) {
+    var accessToken = localStorage.getItem("accessToken");
+    setAccessToken(accessToken);
+    if (accessToken) {
       try {
-        const decodedToken = jwtDecode(auth.accessToken);
+        const decodedToken = jwtDecode(accessToken);
         setUsername(decodedToken.unique_name || "");
       } catch (error) {
         console.error("Error decoding token:", error);
@@ -34,28 +32,17 @@ function App() {
     } else {
       setUsername("");
     }
-  }, [auth.accessToken]);
-
-  const setToken = (tokens) => {
-    setAuth(tokens);
-    localStorage.setItem("accessToken", tokens.accessToken);
-    localStorage.setItem("refreshToken", tokens.refreshToken);
-  };
-
+  }, [accessToken]);
   const logoutThisDevice = () => {
-    setAuth({});
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
+    window.location.href = "/login";
   };
 
   const logoutAllDevices = async () => {
     try {
-      await axios.post(
+      await axiosInstance.post(
         `http://20.39.224.87:5000/api/auth/logout`,
-        {},
-        {
-          headers: { Authorization: `Bearer ${auth.accessToken}` },
-        }
       );
       logoutThisDevice(); 
     } catch (error) {
@@ -68,7 +55,7 @@ function App() {
 
   return (
     <Router>
-      {auth.accessToken && (
+      {accessToken && (
         <Navbar
           logoutThisDevice={logoutThisDevice}
           logoutAllDevices={logoutAllDevices}
@@ -76,13 +63,13 @@ function App() {
         />
       )}
       <Routes>
-        <Route path="/login" element={<Login setToken={setToken} />} />
+        <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route
           path="/courses"
           element={
-            auth.accessToken ? (
-              <CoursesPage token={auth.accessToken} setToken={setToken} />
+            accessToken ? (
+              <CoursesPage/>
             ) : (
               <Navigate to="/login" />
             )
@@ -91,8 +78,8 @@ function App() {
         <Route
           path="/students"
           element={
-            auth.accessToken ? (
-              <StudentsPage token={auth.accessToken} setToken={setToken} />
+            accessToken ? (
+              <StudentsPage />
             ) : (
               <Navigate to="/login" />
             )
@@ -101,8 +88,8 @@ function App() {
         <Route
           path="/enrollments"
           element={
-            auth.accessToken ? (
-              <EnrollmentsPage token={auth.accessToken} setToken={setToken} />
+            accessToken ? (
+              <EnrollmentsPage />
             ) : (
               <Navigate to="/login" />
             )

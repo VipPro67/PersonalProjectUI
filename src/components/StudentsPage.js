@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import axiosInstance from "../utils/axiosConfig";
 import { useNavigate, useLocation } from "react-router-dom";
 import StudentViewModal from "./StudentViewModal";
 import StudentEditModal from "./StudentEditModal";
 import StudentCreateModal from "./StudentCreateModal"; // Add this import
-import { handleTokenError } from "../utils/tokenRefresh";
 
-const StudentPage = ({ token, setToken }) => {
+const StudentPage = () => {
   const [students, setStudents] = useState([]);
   const [error, setError] = useState("");
   const [selectedStudent, setSelectedStudent] = useState(null);
@@ -30,7 +29,7 @@ const StudentPage = ({ token, setToken }) => {
 
   useEffect(() => {
     fetchStudents();
-  }, [token]);
+  }, [location.search]);
   useEffect(() => {
     if (notification.message) {
       const timer = setTimeout(() => {
@@ -54,10 +53,9 @@ const StudentPage = ({ token, setToken }) => {
   };
   const fetchStudents = async () => {
     try {
-      const response = await axios.get(
-        "http://20.39.224.87:5000/api/students",
+      const response = await axiosInstance.get(
+        "/students",
         {
-          headers: { Authorization: `Bearer ${token}` },
           params: {
             ...query,
             gradeMin: query.gradeMin || undefined,
@@ -68,30 +66,20 @@ const StudentPage = ({ token, setToken }) => {
       setStudents(response.data.data);
     } catch (error) {
       console.log("Error fetching students:", error);
-      try {
-        await handleTokenError(error, navigate, setToken, async (newToken) => {
-          const retryResponse = await axios.get(
-            `http://20.39.224.87:5000/api/students${location.search}`,
-            {
-              headers: { Authorization: `Bearer ${newToken}` },
-            }
-          );
-          setStudents(retryResponse.data.data);
+
+      if (error.response && error.response.status === 404) {
+        setStudents([]);
+      } else {
+        console.error("Error fetching students:", error);
+        setNotification({
+          message: "Failed to fetch students",
+          detail: error.response
+            ? error.response.data.message
+            : "Unknown error",
+          type: "error",
         });
-      } catch (finalError) {
-        if (finalError.response && finalError.response.status === 404) {
-          setStudents([]);
-        } else {
-          console.error("Error fetching students:", finalError);
-          setNotification({
-            message: "Failed to fetch students",
-            detail: finalError.response
-              ? finalError.response.data.message
-              : "Unknown error",
-            type: "error",
-          });
-        }
       }
+
     }
   };
 
@@ -108,12 +96,8 @@ const StudentPage = ({ token, setToken }) => {
   const handleDelete = async (studentId) => {
     if (window.confirm("Are you sure you want to delete this student?")) {
       try {
-        await axios.delete(
-          `http://20.39.224.87:5000/api/students/${studentId}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+        await axiosInstance.delete(
+          `/students/${studentId}`);
         setStudents(
           students.filter((student) => student.studentId !== studentId)
         );
@@ -134,13 +118,9 @@ const StudentPage = ({ token, setToken }) => {
 
   const handleUpdateStudent = async (updatedStudent) => {
     try {
-      const response = await axios.put(
-        `http://20.39.224.87:5000/api/students/${updatedStudent.studentId}`,
-        updatedStudent,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const response = await axiosInstance.put(
+        `/students/${updatedStudent.studentId}`,
+        updatedStudent);
       const updatedStudents = students.map((student) =>
         student.studentId === updatedStudent.studentId
           ? response.data.data
@@ -154,11 +134,7 @@ const StudentPage = ({ token, setToken }) => {
       });
     } catch (error) {
       console.error("Error updating student:", error);
-      if (error.response && error.response.status === 401) {
-        localStorage.removeItem("accessToken");
-        navigate("/login");
-      }
-      else if (error.response.data.message === "Validation failed") {
+      if (error.response.data.message === "Validation failed") {
         return error.response.data.error;
       }
 
@@ -171,12 +147,9 @@ const StudentPage = ({ token, setToken }) => {
   };
   const handleCreateStudent = async (newStudent) => {
     try {
-      const response = await axios.post(
-        "http://20.39.224.87:5000/api/students",
-        newStudent,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+      const response = await axiosInstance.post(
+        "/students",
+        newStudent
       );
       setStudents([...students, response.data.data]);
       setIsCreateModalOpen(false);
@@ -186,11 +159,7 @@ const StudentPage = ({ token, setToken }) => {
       });
     } catch (error) {
       console.error("Error creating student:", error);
-      if (error.response && error.response.status === 401) {
-        localStorage.removeItem("accessToken");
-        navigate("/login");
-      }
-      else if (error.response.data.message === "Validation failed") {
+      if (error.response.data.message === "Validation failed") {
         console.log("Validation failed student page");
         return error.response.data.error;
       }
@@ -319,7 +288,7 @@ const StudentPage = ({ token, setToken }) => {
                   {student.dateOfBirth}
                 </td>
                 <td className="py-2 px-4 border-b text-center">
-                <span dangerouslySetInnerHTML={{ __html: student.address }}></span>
+                  <span dangerouslySetInnerHTML={{ __html: student.address }}></span>
                 </td>
                 <td className="py-2 px-4 border-b text-center">
                   {student.grade}
@@ -364,7 +333,6 @@ const StudentPage = ({ token, setToken }) => {
           student={selectedStudent}
           onClose={() => setIsEditModalOpen(false)}
           onUpdate={handleUpdateStudent}
-          token={token}
         />
       )}
 
@@ -372,14 +340,12 @@ const StudentPage = ({ token, setToken }) => {
         <StudentCreateModal
           onClose={() => setIsCreateModalOpen(false)}
           onCreate={handleCreateStudent}
-          token={token}
         />
       )}
       {notification.message && (
         <div
-          className={`fixed bottom-4 right-4 p-4 rounded-md shadow-md ${
-            notification.type === "success" ? "bg-green-500" : "bg-red-500"
-          } text-white`}
+          className={`fixed bottom-4 right-4 p-4 rounded-md shadow-md ${notification.type === "success" ? "bg-green-500" : "bg-red-500"
+            } text-white`}
         >
           <p>{notification.message}</p>
           <p>{notification.detail}</p>

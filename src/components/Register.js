@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
 import ValidationMessage from "./ValidationMessage";
+import axiosInstance from "../utils/axiosConfig";
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -36,12 +37,13 @@ const Register = () => {
           headers: {
             Accept: "application/json",
             "Content-Type": "application/json",
-            "Accept-Language": language, // Include selected language in headers
+            "Accept-Language": language ? language : "en-US", 
           },
         }
       );
 
       if (response.data.status === 200) {
+        alert("Registration successful! You can now log in.");
         navigate("/login"); // Redirect to login page after successful registration
       } else {
         setErrors({

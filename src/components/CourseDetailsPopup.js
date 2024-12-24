@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import axiosInstance from "../utils/axiosConfig";
 
-const CourseDetailsPopup = ({ courseId, token, onClose }) => {
+const CourseDetailsPopup = ({ courseId, onClose }) => {
   const [courseDetails, setCourseDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -9,12 +9,8 @@ const CourseDetailsPopup = ({ courseId, token, onClose }) => {
   useEffect(() => {
     const fetchCourseDetails = async () => {
       try {
-        const response = await axios.get(
-          `http://20.39.224.87:5000/api/courses/${courseId}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+        const response = await axiosInstance.get(
+          `/courses/${courseId}`);
         setCourseDetails(response.data.data);
         setLoading(false);
       } catch (error) {
@@ -25,7 +21,7 @@ const CourseDetailsPopup = ({ courseId, token, onClose }) => {
     };
 
     fetchCourseDetails();
-  }, [courseId, token]);
+  }, [courseId]);
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
