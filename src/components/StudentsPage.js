@@ -155,10 +155,10 @@ const StudentPage = ({ token, setToken }) => {
     } catch (error) {
       console.error("Error updating student:", error);
       if (error.response && error.response.status === 401) {
-        localStorage.removeItem("token");
+        localStorage.removeItem("accessToken");
         navigate("/login");
       }
-      if (error.response.data.message === "Validation failed") {
+      else if (error.response.data.message === "Validation failed") {
         return error.response.data.error;
       }
 
@@ -187,10 +187,11 @@ const StudentPage = ({ token, setToken }) => {
     } catch (error) {
       console.error("Error creating student:", error);
       if (error.response && error.response.status === 401) {
-        localStorage.removeItem("token");
+        localStorage.removeItem("accessToken");
         navigate("/login");
       }
-      if (error.response.data.message === "Validation failed") {
+      else if (error.response.data.message === "Validation failed") {
+        console.log("Validation failed student page");
         return error.response.data.error;
       }
 

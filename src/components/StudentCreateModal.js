@@ -77,10 +77,10 @@ const StudentCreateModal = ({ onClose, onCreate, token }) => {
               value={newStudent.fullName}
               onChange={handleChange}
               className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${
-                errors.FullName ? "border-red-500" : ""
+                errors.fullName ? "border-red-500" : ""
               }`}
             />
-            <ValidationMessage errors={errors} field="FullName" />
+            <ValidationMessage errors={errors} field="fullName" />
           </div>
           <div className="mb-4">
             <label
@@ -96,10 +96,10 @@ const StudentCreateModal = ({ onClose, onCreate, token }) => {
               value={newStudent.email}
               onChange={handleChange}
               className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${
-                errors.Email ? "border-red-500" : ""
+                errors.email ? "border-red-500" : ""
               }`}
             />
-            <ValidationMessage errors={errors} field="Email" />
+            <ValidationMessage errors={errors} field="email" />
           </div>
           <div className="mb-4">
             <label
