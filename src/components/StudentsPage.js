@@ -318,7 +318,7 @@ const StudentPage = ({ token, setToken }) => {
                   {student.dateOfBirth}
                 </td>
                 <td className="py-2 px-4 border-b text-center">
-                  {student.address}
+                <span dangerouslySetInnerHTML={{ __html: student.address }}></span>
                 </td>
                 <td className="py-2 px-4 border-b text-center">
                   {student.grade}

@@ -21,7 +21,8 @@ const StudentViewModal = ({ student, onClose }) => {
           <p><strong>Email:</strong> {student.email}</p>
           <p><strong>Phone Number:</strong> {student.phoneNumber}</p>
           <p><strong>Date of Birth:</strong> {student.dateOfBirth}</p>
-          <p><strong>Address:</strong> {student.address}</p>
+          <p><strong>Address:</strong><span dangerouslySetInnerHTML={{ __html: student.address }}></span>
+          </p>
           <p><strong>Grade:</strong> {student.grade}</p>
         </div>
       </div>

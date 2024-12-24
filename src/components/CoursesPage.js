@@ -311,8 +311,8 @@ const CoursesPage = ({ token, setToken }) => {
                   {course.endDate}
                 </td>
                 <td className="py-2 px-4 border-b text-center">
-                  {course.schedule}
-                </td>
+                <span dangerouslySetInnerHTML={{ __html: course.schedule }}></span>
+                                </td>
                 <td className="py-2 px-4 border-b grid grid-cols-2">
                   <button
                     onClick={() => handleViewDetails(course.courseId)}

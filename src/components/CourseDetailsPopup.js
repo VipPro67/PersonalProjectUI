@@ -48,13 +48,14 @@ const CourseDetailsPopup = ({ courseId, token, onClose }) => {
         <div className="p-4">
           <p><strong>ID:</strong> {courseDetails.courseId}</p>
           <p><strong>Name:</strong> {courseDetails.courseName}</p>
-          <p><strong>Description:</strong> {courseDetails.description}</p>
+          {/* <p><strong>Description:</strong> {courseDetails.description}</p> */}
+          <p><strong>Description:</strong> <span dangerouslySetInnerHTML={{ __html: courseDetails.description }}></span></p>
           <p><strong>Credit:</strong> {courseDetails.credit}</p>
           <p><strong>Instructor:</strong> {courseDetails.instructor}</p>
           <p><strong>Department:</strong> {courseDetails.department}</p>
           <p><strong>Start Date:</strong> {courseDetails.startDate}</p>
           <p><strong>End Date:</strong> {courseDetails.endDate}</p>
-          <p><strong>Schedule:</strong> {courseDetails.schedule}</p>
+          <p><strong>Schedule:</strong><span dangerouslySetInnerHTML={{ __html: courseDetails.schedule }}></span></p>
         </div>
       </div>
     </div>
