@@ -33,13 +33,13 @@ const CoursesPage = () => {
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
     setQueryParams({
-      courseId: searchParams.get("courseId"),
-      courseName: searchParams.get("courseName"),
-      instructor: searchParams.get("instructor"),
-      department: searchParams.get("department"),
-      creditMin: searchParams.get("creditMin"),
-      creditMax: searchParams.get("creditMax"),
-      schedule: searchParams.get("schedule"),
+      courseId: searchParams.get("courseId") || "",
+      courseName: searchParams.get("courseName") || "",
+      instructor: searchParams.get("instructor") || "",
+      department: searchParams.get("department") || "",
+      creditMin: searchParams.get("creditMin") || 0,
+      creditMax: searchParams.get("creditMax") || 10,
+      schedule: searchParams.get("schedule") || "",
       sortBy: searchParams.get("sortBy") || "courseId",
       sortByDirection: searchParams.get("sortByDirection") || "asc",
       page: Number(searchParams.get("page")) || 1,
