@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import axiosInstance from "../utils/axiosConfig";
-import { useNavigate, useLocation } from "react-router-dom";
-import StudentViewModal from "./StudentViewModal";
-import StudentEditModal from "./StudentEditModal";
 import StudentCreateModal from "./StudentCreateModal";
+import StudentEditModal from "./StudentEditModal";
+import StudentViewModal from "./StudentViewModal";
 
 const StudentPage = () => {
   const [students, setStudents] = useState([]);
@@ -22,6 +22,15 @@ const StudentPage = () => {
     gradeMax: "",
     sortBy: "studentId",
     sortByDirection: "asc",
+    page: 1,
+    itemsPerPage: 10,
+  });
+
+  const [pagination, setPagination] = useState({
+    totalItems: 0,
+    currentPage: 1,
+    totalPage: 1,
+    itemsPerPage: 10,
   });
 
   const navigate = useNavigate();
@@ -38,6 +47,8 @@ const StudentPage = () => {
       gradeMax: searchParams.get("gradeMax") || "",
       sortBy: searchParams.get("sortBy") || "studentId",
       sortByDirection: searchParams.get("sortByDirection") || "asc",
+      page: Number(searchParams.get("page")) || 1,
+      itemsPerPage: Number(searchParams.get("itemsPerPage")) || 10,
     });
     fetchStudents();
   }, [location.search]);
@@ -58,9 +69,14 @@ const StudentPage = () => {
         page <= 0 ||
         itemsPerPage <= 0
       ) {
-        setQueryParams({ ...queryParams, page: 1, itemsPerPage: 10 });      }
-      const response = await axiosInstance.get(`/students?${new URLSearchParams(queryParams).toString()}`);
+        setQueryParams({ ...queryParams, page: 1, itemsPerPage: 10 });
+        navigate("/students?page=1&itemsPerPage=10");
+      }
+      const response = await axiosInstance.get(
+        `/students?${new URLSearchParams(queryParams).toString()}`
+      );
       setStudents(response.data.data);
+      setPagination(response.data.pagination);
     } catch (error) {
       console.log("Error fetching students:", error);
       if (error.response && error.response.status === 404) {
@@ -104,6 +120,12 @@ const StudentPage = () => {
     const searchParams = new URLSearchParams(location.search);
     searchParams.set("sortBy", column);
     searchParams.set("sortByDirection", newSortDirection);
+    navigate(`/students?${searchParams.toString()}`);
+  };
+  const handlePageChange = (newPage) => {
+    setQueryParams((prev) => ({ ...prev, page: newPage }));
+    const searchParams = new URLSearchParams(location.search);
+    searchParams.set("page", newPage);
     navigate(`/students?${searchParams.toString()}`);
   };
 
@@ -273,105 +295,140 @@ const StudentPage = () => {
       </form>
 
       {students.length > 0 ? (
-        <table className="min-w-full bg-white border border-gray-300">
-          <thead>
-            <tr className="bg-gray-100">
-              <th
-                className="py-2 px-4 border-b cursor-pointer"
-                onClick={() => handleSort("studentId")}
-              >
-                ID {getSortIcon("studentId")}
-              </th>
-              <th
-                className="py-2 px-4 border-b cursor-pointer"
-                onClick={() => handleSort("fullName")}
-              >
-                Full Name {getSortIcon("fullName")}
-              </th>
-              <th
-                className="py-2 px-4 border-b cursor-pointer"
-                onClick={() => handleSort("email")}
-              >
-                Email {getSortIcon("email")}
-              </th>
-              <th
-                className="py-2 px-4 border-b cursor-pointer"
-                onClick={() => handleSort("phoneNumber")}
-              >
-                Phone Number {getSortIcon("phoneNumber")}
-              </th>
-              <th
-                className="py-2 px-4 border-b cursor-pointer"
-                onClick={() => handleSort("dateOfBirth")}
-              >
-                Date of Birth {getSortIcon("dateOfBirth")}
-              </th>
-              <th
-                className="py-2 px-4 border-b cursor-pointer"
-                onClick={() => handleSort("address")}
-              >
-                Address {getSortIcon("address")}
-              </th>
-              <th
-                className="py-2 px-4 border-b cursor-pointer"
-                onClick={() => handleSort("grade")}
-              >
-                Grade {getSortIcon("grade")}
-              </th>
-              <th className="py-2 px-4 border-b">Actions</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {students.map((student) => (
-              <tr key={student.studentId} className="hover:bg-gray-50">
-                <td className="py-2 px-4 border-b text-center">
-                  {student.studentId}
-                </td>
-                <td className="py-2 px-4 border-b text-center">
-                  {student.fullName}
-                </td>
-                <td className="py-2 px-4 border-b text-center">
-                  {student.email}
-                </td>
-                <td className="py-2 px-4 border-b text-center">
-                  {student.phoneNumber}
-                </td>
-                <td className="py-2 px-4 border-b text-center">
-                  {student.dateOfBirth}
-                </td>
-                <td className="py-2 px-4 border-b text-center">
-                  <span
-                    dangerouslySetInnerHTML={{ __html: student.address }}
-                  ></span>
-                </td>
-                <td className="py-2 px-4 border-b text-center">
-                  {student.grade}
-                </td>
-                <td className="py-2 px-4 border-b text-center">
-                  <button
-                    onClick={() => handleViewDetails(student)}
-                    className="bg-blue-500 text-white px-2 py-1 rounded mr-2"
-                  >
-                    View
-                  </button>
-                  <button
-                    onClick={() => handleEdit(student)}
-                    className="bg-green-500 text-white px-2 py-1 rounded mr-2"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(student.studentId)}
-                    className="bg-red-500 text-white px-2 py-1 rounded"
-                  >
-                    Delete
-                  </button>
-                </td>
+        <div className="container grid grid-cols-1">
+          <table className="min-w-full bg-white border border-gray-300">
+            <thead>
+              <tr className="bg-gray-100">
+                <th
+                  className="py-2 px-4 border-b cursor-pointer"
+                  onClick={() => handleSort("studentId")}
+                >
+                  ID {getSortIcon("studentId")}
+                </th>
+                <th
+                  className="py-2 px-4 border-b cursor-pointer"
+                  onClick={() => handleSort("fullName")}
+                >
+                  Full Name {getSortIcon("fullName")}
+                </th>
+                <th
+                  className="py-2 px-4 border-b cursor-pointer"
+                  onClick={() => handleSort("email")}
+                >
+                  Email {getSortIcon("email")}
+                </th>
+                <th
+                  className="py-2 px-4 border-b cursor-pointer"
+                  onClick={() => handleSort("phoneNumber")}
+                >
+                  Phone Number {getSortIcon("phoneNumber")}
+                </th>
+                <th
+                  className="py-2 px-4 border-b cursor-pointer"
+                  onClick={() => handleSort("dateOfBirth")}
+                >
+                  Date of Birth {getSortIcon("dateOfBirth")}
+                </th>
+                <th
+                  className="py-2 px-4 border-b cursor-pointer"
+                  onClick={() => handleSort("address")}
+                >
+                  Address {getSortIcon("address")}
+                </th>
+                <th
+                  className="py-2 px-4 border-b cursor-pointer"
+                  onClick={() => handleSort("grade")}
+                >
+                  Grade {getSortIcon("grade")}
+                </th>
+                <th className="py-2 px-4 border-b">Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+
+            <tbody>
+              {students.map((student) => (
+                <tr key={student.studentId} className="hover:bg-gray-50">
+                  <td className="py-2 px-4 border-b text-center">
+                    {student.studentId}
+                  </td>
+                  <td className="py-2 px-4 border-b text-center">
+                    {student.fullName}
+                  </td>
+                  <td className="py-2 px-4 border-b text-center">
+                    {student.email}
+                  </td>
+                  <td className="py-2 px-4 border-b text-center">
+                    {student.phoneNumber}
+                  </td>
+                  <td className="py-2 px-4 border-b text-center">
+                    {student.dateOfBirth}
+                  </td>
+                  <td className="py-2 px-4 border-b text-center">
+                    <span
+                      dangerouslySetInnerHTML={{ __html: student.address }}
+                    ></span>
+                  </td>
+                  <td className="py-2 px-4 border-b text-center">
+                    {student.grade}
+                  </td>
+                  <td className="py-2 px-4 border-b text-center">
+                    <button
+                      onClick={() => handleViewDetails(student)}
+                      className="bg-blue-500 text-white px-2 py-1 rounded mr-2"
+                    >
+                      View
+                    </button>
+                    <button
+                      onClick={() => handleEdit(student)}
+                      className="bg-green-500 text-white px-2 py-1 rounded mr-2"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(student.studentId)}
+                      className="bg-red-500 text-white px-2 py-1 rounded"
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {pagination.totalPage > 1 && (
+            <div className="flex justify-center mt-4">
+              <nav className="inline-flex rounded-md shadow">
+                <button
+                  onClick={() => handlePageChange(pagination.currentPage - 1)}
+                  disabled={pagination.currentPage === 1}
+                  className="px-3 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                >
+                  Previous
+                </button>
+                {[...Array(pagination.totalPage)].map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handlePageChange(index + 1)}
+                    className={`px-3 py-2 border border-gray-300 bg-white text-sm font-medium ${
+                      pagination.currentPage === index + 1
+                        ? "text-blue-600 bg-blue-50"
+                        : "text-gray-500 hover:bg-gray-50"
+                    }`}
+                  >
+                    {index + 1}
+                  </button>
+                ))}
+                <button
+                  onClick={() => handlePageChange(pagination.currentPage + 1)}
+                  disabled={pagination.currentPage === pagination.totalPage}
+                  className="px-3 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                >
+                  Next
+                </button>
+              </nav>
+            </div>
+          )}
+        </div>
       ) : (
         <p>No students found</p>
       )}

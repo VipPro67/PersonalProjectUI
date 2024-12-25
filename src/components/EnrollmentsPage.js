@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import axiosInstance from "../utils/axiosConfig";
-import { useNavigate } from "react-router-dom";
 import EnrollmentCreateModal from "./EnrollmentCreateModal";
 
 const EnrollmentsPage = () => {
@@ -19,6 +18,12 @@ const EnrollmentsPage = () => {
     page: 1,
     itemsPerPage: 10,
   });
+  const [pagination, setPagination] = useState({
+    totalItems: 0,
+    currentPage: 1,
+    totalPages: 1,
+    itemsPerPage: 10,
+  });
 
   useEffect(() => {
     fetchEnrollments(query);
@@ -30,6 +35,7 @@ const EnrollmentsPage = () => {
         `/enrollments?${new URLSearchParams(queryParams).toString()}`
       );
       setEnrollments(response.data.data);
+      setPagination(response.data.pagination);
     } catch (error) {
       if (error.response && error.response.status === 404) {
         setEnrollments([]);
@@ -113,14 +119,19 @@ const EnrollmentsPage = () => {
 
   const handleSort = (column) => {
     const newSortOrder =
-      query.sortBy === column && query.sortByDirection === "asc" ? "desc" : "asc";
+      query.sortBy === column && query.sortByDirection === "asc"
+        ? "desc"
+        : "asc";
 
     setQuery((prevQuery) => ({
       ...prevQuery,
       sortBy: column,
       sortByDirection: newSortOrder,
     }));
-    
+  };
+  const handlePageChange = (newPage) => {
+    setQuery((prevQuery) => ({ ...prevQuery, page: newPage }));
+    fetchEnrollments({ ...query, page: newPage });
   };
 
   const getSortIcon = (column) => {
@@ -170,63 +181,99 @@ const EnrollmentsPage = () => {
         </div>
       </form>
       {enrollments.length > 0 ? (
-        <table className="min-w-full bg-white border border-gray-300">
-          <thead>
-            <tr className="bg-gray-100">
-              <th
-                className="py-2 px-4 border-b cursor-pointer"
-                onClick={() => handleSort("enrollmentId")}
-              >
-                Enrollment ID{getSortIcon("enrollmentId")}
-              </th>
-              <th
-                className="py-2 px-4 border-b cursor-pointer"
-                onClick={() => handleSort("courseId")}
-              >
-                Course ID{getSortIcon("courseId")}
-              </th>
-              <th
-                className="py-2 px-4 border-b cursor-pointer"
-                onClick={() => handleSort("studentId")}
-              >
-                Student ID{getSortIcon("studentId")}
-              </th>
-              <th className="py-2 px-4 border-b">Course Name</th>
+        <div className="container grid grid-cols-1">
+          {" "}
+          <table className="min-w-full bg-white border border-gray-300">
+            <thead>
+              <tr className="bg-gray-100">
+                <th
+                  className="py-2 px-4 border-b cursor-pointer"
+                  onClick={() => handleSort("enrollmentId")}
+                >
+                  Enrollment ID{getSortIcon("enrollmentId")}
+                </th>
+                <th
+                  className="py-2 px-4 border-b cursor-pointer"
+                  onClick={() => handleSort("courseId")}
+                >
+                  Course ID{getSortIcon("courseId")}
+                </th>
+                <th
+                  className="py-2 px-4 border-b cursor-pointer"
+                  onClick={() => handleSort("studentId")}
+                >
+                  Student ID{getSortIcon("studentId")}
+                </th>
+                <th className="py-2 px-4 border-b">Course Name</th>
 
-              <th className="py-2 px-4 border-b">Student Name</th>
-              <th className="py-2 px-4 border-b">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {enrollments.map((enrollment) => (
-              <tr key={enrollment.enrollmentId} className="hover:bg-gray-50">
-                <td className="py-2 px-4 border-b text-center">
-                  {enrollment.enrollmentId}
-                </td>
-                <td className="py-2 px-4 border-b text-center">
-                  {enrollment.courseId}
-                </td>{" "}
-                <td className="py-2 px-4 border-b text-center">
-                  {enrollment.studentId}
-                </td>
-                <td className="py-2 px-4 border-b text-center">
-                  {enrollment.courseName}
-                </td>
-                <td className="py-2 px-4 border-b text-center">
-                  {enrollment.studentName}
-                </td>
-                <td className="py-2 px-4 border-b text-center">
-                  <button
-                    onClick={() => handleDelete(enrollment.enrollmentId)}
-                    className="bg-red-500 text-white px-2 py-1 rounded"
-                  >
-                    Delete
-                  </button>
-                </td>
+                <th className="py-2 px-4 border-b">Student Name</th>
+                <th className="py-2 px-4 border-b">Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {enrollments.map((enrollment) => (
+                <tr key={enrollment.enrollmentId} className="hover:bg-gray-50">
+                  <td className="py-2 px-4 border-b text-center">
+                    {enrollment.enrollmentId}
+                  </td>
+                  <td className="py-2 px-4 border-b text-center">
+                    {enrollment.courseId}
+                  </td>{" "}
+                  <td className="py-2 px-4 border-b text-center">
+                    {enrollment.studentId}
+                  </td>
+                  <td className="py-2 px-4 border-b text-center">
+                    {enrollment.courseName}
+                  </td>
+                  <td className="py-2 px-4 border-b text-center">
+                    {enrollment.studentName}
+                  </td>
+                  <td className="py-2 px-4 border-b text-center">
+                    <button
+                      onClick={() => handleDelete(enrollment.enrollmentId)}
+                      className="bg-red-500 text-white px-2 py-1 rounded"
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {pagination.totalPage > 0 && (
+            <div className="flex justify-center mt-4">
+              <nav className="inline-flex rounded-md shadow">
+                <button
+                  onClick={() => handlePageChange(pagination.currentPage - 1)}
+                  disabled={pagination.currentPage === 1}
+                  className="px-3 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                >
+                  Previous
+                </button>
+                {[...Array(pagination.totalPage)].map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handlePageChange(index + 1)}
+                    className={`px-3 py-2 border border-gray-300 bg-white text-sm font-medium ${
+                      pagination.currentPage === index + 1
+                        ? "text-blue-600 bg-blue-50"
+                        : "text-gray-500 hover:bg-gray-50"
+                    }`}
+                  >
+                    {index + 1}
+                  </button>
+                ))}
+                <button
+                  onClick={() => handlePageChange(pagination.currentPage + 1)}
+                  disabled={pagination.currentPage === pagination.totalPage}
+                  className="px-3 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                >
+                  Next
+                </button>
+              </nav>
+            </div>
+          )}
+        </div>
       ) : (
         <p>No enrollments found</p>
       )}

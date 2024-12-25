@@ -14,6 +14,12 @@ const CoursesPage = () => {
     useState(null);
   const [editingCourse, setEditingCourse] = useState(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [pagination, setPagination] = useState({
+    totalItems: 0,
+    currentPage: 1,
+    totalPage: 1,
+    itemsPerPage: 10,
+  });
 
   const [queryParams, setQueryParams] = useState({
     courseId: "",
@@ -72,6 +78,8 @@ const CoursesPage = () => {
         `/courses?${new URLSearchParams(queryParams).toString()}`
       );
       setCourses(response.data.data);
+      setPagination(response.data.pagination);
+      console.log("Pagination:", response.data.pagination);
     } catch (error) {
       console.log("Error fetching courses:", error);
       if (error.response && error.response.status === 404) {
@@ -86,6 +94,7 @@ const CoursesPage = () => {
       }
     }
   };
+
   const handleQueryChange = (e) => {
     const { name, value } = e.target;
     setQueryParams((prev) => ({ ...prev, [name]: value }));
@@ -114,6 +123,12 @@ const CoursesPage = () => {
     const searchParams = new URLSearchParams(location.search);
     searchParams.set("sortBy", column);
     searchParams.set("sortByDirection", newSortDirection);
+    navigate(`/courses?${searchParams.toString()}`);
+  };
+  const handlePageChange = (newPage) => {
+    setQueryParams((prev) => ({ ...prev, page: newPage }));
+    const searchParams = new URLSearchParams(location.search);
+    searchParams.set("page", newPage);
     navigate(`/courses?${searchParams.toString()}`);
   };
 
@@ -278,7 +293,7 @@ const CoursesPage = () => {
       </form>
 
       {courses.length > 0 ? (
-        <div>
+        <div className="container grid grid-cols-1">
           <table className="min-w-full bg-white border border-gray-300">
             <thead>
               <tr className="bg-gray-100">
@@ -391,7 +406,40 @@ const CoursesPage = () => {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </table>{" "}
+          {pagination.totalPage > 0 && (
+            <div className="flex justify-center mt-4">
+              <nav className="inline-flex rounded-md shadow">
+                <button
+                  onClick={() => handlePageChange(pagination.currentPage - 1)}
+                  disabled={pagination.currentPage === 1}
+                  className="px-3 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                >
+                  Previous
+                </button>
+                {[...Array(pagination.totalPage)].map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handlePageChange(index + 1)}
+                    className={`px-3 py-2 border border-gray-300 bg-white text-sm font-medium ${
+                      pagination.currentPage === index + 1
+                        ? "text-blue-600 bg-blue-50"
+                        : "text-gray-500 hover:bg-gray-50"
+                    }`}
+                  >
+                    {index + 1}
+                  </button>
+                ))}
+                <button
+                  onClick={() => handlePageChange(pagination.currentPage + 1)}
+                  disabled={pagination.currentPage === pagination.totalPage}
+                  className="px-3 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                >
+                  Next
+                </button>
+              </nav>
+            </div>
+          )}
         </div>
       ) : (
         <p>No courses found</p>
