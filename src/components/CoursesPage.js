@@ -25,8 +25,6 @@ const CoursesPage = () => {
     schedule: "",
     sortBy: "courseId",
     sortByDirection: "asc",
-    page: 1,
-    itemsPerPage: 10,
   });
 
   const navigate = useNavigate();
@@ -34,12 +32,20 @@ const CoursesPage = () => {
 
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
-    const page = searchParams.get("page");
-    const itemsPerPage = searchParams.get("itemsPerPage");
-    if (isNaN(page) || isNaN(itemsPerPage) || page <= 0 || itemsPerPage <= 0) {
-      setQueryParams({ ...queryParams, page: 1, itemsPerPage: 10 });
-      navigate(`/courses?page=1&itemsPerPage=10`);
-    }
+    setQueryParams({
+      courseId: searchParams.get("courseId"),
+      courseName: searchParams.get("courseName"),
+      instructor: searchParams.get("instructor"),
+      department: searchParams.get("department"),
+      creditMin: searchParams.get("creditMin"),
+      creditMax: searchParams.get("creditMax"),
+      schedule: searchParams.get("schedule"),
+      sortBy: searchParams.get("sortBy") || "courseId",
+      sortByDirection: searchParams.get("sortByDirection") || "asc",
+      page: Number(searchParams.get("page")) || 1,
+      itemsPerPage: Number(searchParams.get("itemsPerPage")) || 10,
+    });
+
     fetchCourses();
   }, [location.search]);
 
@@ -50,7 +56,21 @@ const CoursesPage = () => {
 
   const fetchCourses = async () => {
     try {
-      const response = await axiosInstance.get(`/courses${location.search}`);
+      const searchParams = new URLSearchParams(location.search);
+      const page = searchParams.get("page");
+      const itemsPerPage = searchParams.get("itemsPerPage");
+      if (
+        isNaN(page) ||
+        isNaN(itemsPerPage) ||
+        page <= 0 ||
+        itemsPerPage <= 0
+      ) {
+        setQueryParams({ ...queryParams, page: 1, itemsPerPage: 10 });
+        navigate("/courses?page=1&itemsPerPage=10");
+      }
+      const response = await axiosInstance.get(
+        `/courses?${new URLSearchParams(queryParams).toString()}`
+      );
       setCourses(response.data.data);
     } catch (error) {
       console.log("Error fetching courses:", error);
@@ -258,119 +278,121 @@ const CoursesPage = () => {
       </form>
 
       {courses.length > 0 ? (
-        <table className="min-w-full bg-white border border-gray-300">
-          <thead>
-            <tr className="bg-gray-100">
-              <th
-                className="py-2 px-4 border-b cursor-pointer"
-                onClick={() => handleSort("courseId")}
-              >
-                ID{getSortIcon("courseId")}
-              </th>
-              <th
-                className="py-2 px-4 border-b cursor-pointer"
-                onClick={() => handleSort("courseName")}
-              >
-                Name{getSortIcon("courseName")}
-              </th>
-              <th
-                className="py-2 px-4 border-b cursor-pointer"
-                onClick={() => handleSort("credit")}
-              >
-                Credit{getSortIcon("credit")}
-              </th>
-              <th
-                className="py-2 px-4 border-b cursor-pointer"
-                onClick={() => handleSort("instructor")}
-              >
-                Instructor{getSortIcon("instructor")}
-              </th>
-              <th
-                className="py-2 px-4 border-b cursor-pointer"
-                onClick={() => handleSort("department")}
-              >
-                Department{getSortIcon("department")}
-              </th>
-              <th
-                className="py-2 px-4 border-b cursor-pointer"
-                onClick={() => handleSort("startDate")}
-              >
-                Start Date{"startDate"}
-              </th>
-              <th
-                className="py-2 px-4 border-b cursor-pointer"
-                onClick={() => handleSort("endDate")}
-              >
-                End Date{"endDate"}
-              </th>
-              <th
-                className="py-2 px-4 border-b cursor-pointer"
-                onClick={() => handleSort("schedule")}
-              >
-                Schedule{"schedule"}
-              </th>
-              <th className="py-2 px-4 border-b">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {courses.map((course) => (
-              <tr key={course.courseId} className="hover:bg-gray-50">
-                <td className="py-2 px-4 border-b text-center">
-                  {course.courseId}
-                </td>
-                <td className="py-2 px-4 border-b text-center">
-                  {course.courseName}
-                </td>
-                <td className="py-2 px-4 border-b text-center">
-                  {course.credit}
-                </td>
-                <td className="py-2 px-4 border-b text-center">
-                  {course.instructor}
-                </td>
-                <td className="py-2 px-4 border-b text-center">
-                  {course.department}
-                </td>
-                <td className="py-2 px-4 border-b text-center">
-                  {course.startDate}
-                </td>
-                <td className="py-2 px-4 border-b text-center">
-                  {course.endDate}
-                </td>
-                <td className="py-2 px-4 border-b text-center">
-                  <span
-                    dangerouslySetInnerHTML={{ __html: course.schedule }}
-                  ></span>
-                </td>
-                <td className="py-2 px-4 border-b grid grid-cols-2">
-                  <button
-                    onClick={() => handleViewDetails(course.courseId)}
-                    className="bg-blue-500 text-white p-1 m-1 rounded"
-                  >
-                    View
-                  </button>
-                  <button
-                    onClick={() => handleViewStudents(course.courseId)}
-                    className="bg-blue-500 text-white p-1 m-1 rounded"
-                  >
-                    Students
-                  </button>
-                  <button
-                    onClick={() => handleEdit(course.courseId)}
-                    className="bg-green-500 text-white p-1 m-1 rounded"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(course.courseId)}
-                    className="bg-red-500 text-white p-1 m-1 rounded"
-                  >
-                    Delete
-                  </button>
-                </td>
+        <div>
+          <table className="min-w-full bg-white border border-gray-300">
+            <thead>
+              <tr className="bg-gray-100">
+                <th
+                  className="py-2 px-4 border-b cursor-pointer"
+                  onClick={() => handleSort("courseId")}
+                >
+                  ID{getSortIcon("courseId")}
+                </th>
+                <th
+                  className="py-2 px-4 border-b cursor-pointer"
+                  onClick={() => handleSort("courseName")}
+                >
+                  Name{getSortIcon("courseName")}
+                </th>
+                <th
+                  className="py-2 px-4 border-b cursor-pointer"
+                  onClick={() => handleSort("credit")}
+                >
+                  Credit{getSortIcon("credit")}
+                </th>
+                <th
+                  className="py-2 px-4 border-b cursor-pointer"
+                  onClick={() => handleSort("instructor")}
+                >
+                  Instructor{getSortIcon("instructor")}
+                </th>
+                <th
+                  className="py-2 px-4 border-b cursor-pointer"
+                  onClick={() => handleSort("department")}
+                >
+                  Department{getSortIcon("department")}
+                </th>
+                <th
+                  className="py-2 px-4 border-b cursor-pointer"
+                  onClick={() => handleSort("startDate")}
+                >
+                  Start Date{"startDate"}
+                </th>
+                <th
+                  className="py-2 px-4 border-b cursor-pointer"
+                  onClick={() => handleSort("endDate")}
+                >
+                  End Date{"endDate"}
+                </th>
+                <th
+                  className="py-2 px-4 border-b cursor-pointer"
+                  onClick={() => handleSort("schedule")}
+                >
+                  Schedule{"schedule"}
+                </th>
+                <th className="py-2 px-4 border-b">Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {courses.map((course) => (
+                <tr key={course.courseId} className="hover:bg-gray-50">
+                  <td className="py-2 px-4 border-b text-center">
+                    {course.courseId}
+                  </td>
+                  <td className="py-2 px-4 border-b text-center">
+                    {course.courseName}
+                  </td>
+                  <td className="py-2 px-4 border-b text-center">
+                    {course.credit}
+                  </td>
+                  <td className="py-2 px-4 border-b text-center">
+                    {course.instructor}
+                  </td>
+                  <td className="py-2 px-4 border-b text-center">
+                    {course.department}
+                  </td>
+                  <td className="py-2 px-4 border-b text-center">
+                    {course.startDate}
+                  </td>
+                  <td className="py-2 px-4 border-b text-center">
+                    {course.endDate}
+                  </td>
+                  <td className="py-2 px-4 border-b text-center">
+                    <span
+                      dangerouslySetInnerHTML={{ __html: course.schedule }}
+                    ></span>
+                  </td>
+                  <td className="py-2 px-4 border-b grid grid-cols-2">
+                    <button
+                      onClick={() => handleViewDetails(course.courseId)}
+                      className="bg-blue-500 text-white p-1 m-1 rounded"
+                    >
+                      View
+                    </button>
+                    <button
+                      onClick={() => handleViewStudents(course.courseId)}
+                      className="bg-blue-500 text-white p-1 m-1 rounded"
+                    >
+                      Students
+                    </button>
+                    <button
+                      onClick={() => handleEdit(course.courseId)}
+                      className="bg-green-500 text-white p-1 m-1 rounded"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(course.courseId)}
+                      className="bg-red-500 text-white p-1 m-1 rounded"
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       ) : (
         <p>No courses found</p>
       )}

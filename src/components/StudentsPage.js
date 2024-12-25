@@ -29,12 +29,16 @@ const StudentPage = () => {
 
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
-    const page = searchParams.get("page");
-    const itemsPerPage = searchParams.get("itemsPerPage");
-    if (isNaN(page) || isNaN(itemsPerPage) || page <= 0 || itemsPerPage <= 0) {
-      setQueryParams({ ...queryParams, page: 1, itemsPerPage: 10 });
-      navigate(`/students?page=1&itemsPerPage=10`);
-    }
+    setQueryParams({
+      studentName: searchParams.get("studentName") || "",
+      email: searchParams.get("email") || "",
+      phoneNumber: searchParams.get("phoneNumber") || "",
+      address: searchParams.get("address") || "",
+      gradeMin: searchParams.get("gradeMin") || "",
+      gradeMax: searchParams.get("gradeMax") || "",
+      sortBy: searchParams.get("sortBy") || "studentId",
+      sortByDirection: searchParams.get("sortByDirection") || "asc",
+    });
     fetchStudents();
   }, [location.search]);
 
@@ -45,8 +49,17 @@ const StudentPage = () => {
 
   const fetchStudents = async () => {
     try {
-      //check page, itemsPerPage valid 
-      const response = await axiosInstance.get(`/students${location.search}`);
+      const searchParams = new URLSearchParams(location.search);
+      const page = searchParams.get("page");
+      const itemsPerPage = searchParams.get("itemsPerPage");
+      if (
+        isNaN(page) ||
+        isNaN(itemsPerPage) ||
+        page <= 0 ||
+        itemsPerPage <= 0
+      ) {
+        setQueryParams({ ...queryParams, page: 1, itemsPerPage: 10 });      }
+      const response = await axiosInstance.get(`/students?${new URLSearchParams(queryParams).toString()}`);
       setStudents(response.data.data);
     } catch (error) {
       console.log("Error fetching students:", error);
@@ -74,8 +87,6 @@ const StudentPage = () => {
     Object.entries(queryParams).forEach(([key, value]) => {
       if (value) searchParams.append(key, value);
     });
-    searchParams.append("page", "1");
-    searchParams.append("itemsPerPage", "10");
     navigate(`/students?${searchParams.toString()}`);
   };
 
@@ -265,25 +276,46 @@ const StudentPage = () => {
         <table className="min-w-full bg-white border border-gray-300">
           <thead>
             <tr className="bg-gray-100">
-              <th className="py-2 px-4 border-b cursor-pointer" onClick={() => handleSort("studentId")}>
+              <th
+                className="py-2 px-4 border-b cursor-pointer"
+                onClick={() => handleSort("studentId")}
+              >
                 ID {getSortIcon("studentId")}
               </th>
-              <th className="py-2 px-4 border-b cursor-pointer" onClick={() => handleSort("fullName")}>
+              <th
+                className="py-2 px-4 border-b cursor-pointer"
+                onClick={() => handleSort("fullName")}
+              >
                 Full Name {getSortIcon("fullName")}
               </th>
-              <th className="py-2 px-4 border-b cursor-pointer" onClick={() => handleSort("email")}>
+              <th
+                className="py-2 px-4 border-b cursor-pointer"
+                onClick={() => handleSort("email")}
+              >
                 Email {getSortIcon("email")}
               </th>
-              <th className="py-2 px-4 border-b cursor-pointer" onClick={() => handleSort("phoneNumber")}>
+              <th
+                className="py-2 px-4 border-b cursor-pointer"
+                onClick={() => handleSort("phoneNumber")}
+              >
                 Phone Number {getSortIcon("phoneNumber")}
               </th>
-              <th className="py-2 px-4 border-b cursor-pointer" onClick={() => handleSort("dateOfBirth")}>
+              <th
+                className="py-2 px-4 border-b cursor-pointer"
+                onClick={() => handleSort("dateOfBirth")}
+              >
                 Date of Birth {getSortIcon("dateOfBirth")}
               </th>
-              <th className="py-2 px-4 border-b cursor-pointer" onClick={() => handleSort("address")}>
+              <th
+                className="py-2 px-4 border-b cursor-pointer"
+                onClick={() => handleSort("address")}
+              >
                 Address {getSortIcon("address")}
               </th>
-              <th className="py-2 px-4 border-b cursor-pointer" onClick={() => handleSort("grade")}>
+              <th
+                className="py-2 px-4 border-b cursor-pointer"
+                onClick={() => handleSort("grade")}
+              >
                 Grade {getSortIcon("grade")}
               </th>
               <th className="py-2 px-4 border-b">Actions</th>

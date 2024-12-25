@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axiosInstance from "../utils/axiosConfig";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import EnrollmentCreateModal from "./EnrollmentCreateModal";
 
 const EnrollmentsPage = () => {
@@ -14,38 +14,21 @@ const EnrollmentsPage = () => {
   const [query, setQuery] = useState({
     courseId: "",
     studentId: "",
+    sortBy: "enrollmentId",
+    sortByDirection: "asc",
     page: 1,
     itemsPerPage: 10,
   });
 
-  const navigate = useNavigate();
-  const location = useLocation();
   useEffect(() => {
-    const searchParams = new URLSearchParams(location.search);
-    const page = searchParams.get("page") || 1;
-    const itemsPerPage = searchParams.get("itemsPerPage") || 10;
-    const courseId = searchParams.get("courseId") || "";
-    const studentId = searchParams.get("studentId") || "";
+    fetchEnrollments(query);
+  }, []);
 
-    setQuery({
-      courseId,
-      studentId,
-      page: Number(page),
-      itemsPerPage: Number(itemsPerPage),
-    });
-
-    fetchEnrollments({ courseId, studentId, page, itemsPerPage });
-  }, [location.search]);
-
-  const fetchEnrollments = async ({
-    courseId,
-    studentId,
-    page,
-    itemsPerPage,
-  }) => {
+  const fetchEnrollments = async (queryParams) => {
     try {
       const response = await axiosInstance.get(
-        `/enrollments?courseId=${courseId}&studentId=${studentId}&page=${page}&itemsPerPage=${itemsPerPage}`);
+        `/enrollments?${new URLSearchParams(queryParams).toString()}`
+      );
       setEnrollments(response.data.data);
     } catch (error) {
       if (error.response && error.response.status === 404) {
@@ -62,6 +45,7 @@ const EnrollmentsPage = () => {
       }
     }
   };
+
   useEffect(() => {
     if (notification.message) {
       const timer = setTimeout(() => {
@@ -73,9 +57,7 @@ const EnrollmentsPage = () => {
 
   const createEnrollment = async (newEnrollment) => {
     try {
-      const response = await axiosInstance.post(
-        "/enrollments",
-        newEnrollment);
+      const response = await axiosInstance.post("/enrollments", newEnrollment);
       fetchEnrollments(query);
       setIsCreateModalOpen(false);
       setNotification({
@@ -99,8 +81,7 @@ const EnrollmentsPage = () => {
   const handleDelete = async (enrollmentId) => {
     if (window.confirm("Are you sure you want to delete this enrollment?")) {
       try {
-        await axiosInstance.delete(
-          `/enrollments/${enrollmentId}`);
+        await axiosInstance.delete(`/enrollments/${enrollmentId}`);
         fetchEnrollments(query);
         setNotification({
           message: "Enrollment deleted successfully",
@@ -127,12 +108,28 @@ const EnrollmentsPage = () => {
 
   const handleQuerySubmit = (e) => {
     e.preventDefault();
-    const searchParams = new URLSearchParams();
-    Object.entries(query).forEach(([key, value]) => {
-      if (value) searchParams.append(key, value);
-    });
-    navigate(`/enrollments?${searchParams.toString()}`);
+    fetchEnrollments(query);
   };
+
+  const handleSort = (column) => {
+    const newSortOrder =
+      query.sortBy === column && query.sortByDirection === "asc" ? "desc" : "asc";
+
+    setQuery((prevQuery) => ({
+      ...prevQuery,
+      sortBy: column,
+      sortByDirection: newSortOrder,
+    }));
+    
+  };
+
+  const getSortIcon = (column) => {
+    if (query.sortBy === column) {
+      return query.sortByDirection === "asc" ? "▲" : "▼";
+    }
+    return null;
+  };
+
   return (
     <div className="container mx-auto p-4">
       <div className="container grid grid-cols-2">
@@ -148,7 +145,6 @@ const EnrollmentsPage = () => {
       </div>
       <form onSubmit={handleQuerySubmit} className="mb-4 bg-gray-100">
         <div className="grid grid-cols-3 gap-4">
-          {" "}
           <input
             type="text"
             name="courseId"
@@ -177,10 +173,26 @@ const EnrollmentsPage = () => {
         <table className="min-w-full bg-white border border-gray-300">
           <thead>
             <tr className="bg-gray-100">
-              <th className="py-2 px-4 border-b">Enrollment ID</th>
-              <th className="py-2 px-4 border-b">Course ID</th>
+              <th
+                className="py-2 px-4 border-b cursor-pointer"
+                onClick={() => handleSort("enrollmentId")}
+              >
+                Enrollment ID{getSortIcon("enrollmentId")}
+              </th>
+              <th
+                className="py-2 px-4 border-b cursor-pointer"
+                onClick={() => handleSort("courseId")}
+              >
+                Course ID{getSortIcon("courseId")}
+              </th>
+              <th
+                className="py-2 px-4 border-b cursor-pointer"
+                onClick={() => handleSort("studentId")}
+              >
+                Student ID{getSortIcon("studentId")}
+              </th>
               <th className="py-2 px-4 border-b">Course Name</th>
-              <th className="py-2 px-4 border-b">Student ID</th>
+
               <th className="py-2 px-4 border-b">Student Name</th>
               <th className="py-2 px-4 border-b">Actions</th>
             </tr>
@@ -193,12 +205,12 @@ const EnrollmentsPage = () => {
                 </td>
                 <td className="py-2 px-4 border-b text-center">
                   {enrollment.courseId}
+                </td>{" "}
+                <td className="py-2 px-4 border-b text-center">
+                  {enrollment.studentId}
                 </td>
                 <td className="py-2 px-4 border-b text-center">
                   {enrollment.courseName}
-                </td>
-                <td className="py-2 px-4 border-b text-center">
-                  {enrollment.studentId}
                 </td>
                 <td className="py-2 px-4 border-b text-center">
                   {enrollment.studentName}
@@ -227,8 +239,9 @@ const EnrollmentsPage = () => {
       )}
       {notification.message && (
         <div
-          className={`fixed bottom-4 right-4 p-4 rounded-md shadow-md ${notification.type === "success" ? "bg-green-500" : "bg-red-500"
-            } text-white`}
+          className={`fixed bottom-4 right-4 p-4 rounded-md shadow-md ${
+            notification.type === "success" ? "bg-green-500" : "bg-red-500"
+          } text-white`}
         >
           <p>{notification.message}</p>
           <p>{notification.detail}</p>
