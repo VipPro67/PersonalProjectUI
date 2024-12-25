@@ -21,7 +21,9 @@ const StudentsInCoursePopup = ({ courseId, token, onClose }) => {
         setLoading(false);
       } catch (error) {
         console.error("Error fetching students:", error);
-        setError("Failed to fetch students");
+        if(error.response && error.response.status === 404) {
+          setError("No students found in this course.");
+        }
         setLoading(false);
       }
     };

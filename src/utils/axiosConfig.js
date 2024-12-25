@@ -23,7 +23,7 @@ axiosInstance.interceptors.response.use(
     if (error.response.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       try {
-        const { response } = await axios.post('auth/refresh', { refreshToken: localStorage.getItem('refreshToken') });
+        const { response } = await axios.post('http://20.39.224.87:5000/api/auth/refresh', { refreshToken: localStorage.getItem('refreshToken') });
         const newToken = response.data.accessToken;
         
         if (newToken) {

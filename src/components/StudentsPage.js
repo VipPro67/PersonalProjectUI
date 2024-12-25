@@ -3,86 +3,105 @@ import axiosInstance from "../utils/axiosConfig";
 import { useNavigate, useLocation } from "react-router-dom";
 import StudentViewModal from "./StudentViewModal";
 import StudentEditModal from "./StudentEditModal";
-import StudentCreateModal from "./StudentCreateModal"; // Add this import
+import StudentCreateModal from "./StudentCreateModal";
 
 const StudentPage = () => {
   const [students, setStudents] = useState([]);
-  const [error, setError] = useState("");
+  const [notice, setNotice] = useState({ message: "", detail: "", type: "" });
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [notification, setNotification] = useState({ message: "", type: "" });
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
-  const [query, setQuery] = useState({
+  const [queryParams, setQueryParams] = useState({
     studentName: "",
     email: "",
     phoneNumber: "",
     address: "",
     gradeMin: "",
     gradeMax: "",
-    page: 1,
-    itemsPerPage: 10,
+    sortBy: "studentId",
+    sortByDirection: "asc",
   });
+
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const page = searchParams.get("page");
+    const itemsPerPage = searchParams.get("itemsPerPage");
+    if (isNaN(page) || isNaN(itemsPerPage) || page <= 0 || itemsPerPage <= 0) {
+      setQueryParams({ ...queryParams, page: 1, itemsPerPage: 10 });
+      navigate(`/students?page=1&itemsPerPage=10`);
+    }
     fetchStudents();
   }, [location.search]);
-  useEffect(() => {
-    if (notification.message) {
-      const timer = setTimeout(() => {
-        setNotification({ message: "", type: "" });
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [notification]);
-  useEffect(() => {
-    if (notification.message) {
-      const timer = setTimeout(() => {
-        setNotification({ message: "", type: "" });
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [notification]);
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    fetchStudents();
+  const showNotice = (message, detail, type) => {
+    setNotice({ message, detail, type });
+    setTimeout(() => setNotice({ message: "", detail: "", type: "" }), 3000);
   };
+
   const fetchStudents = async () => {
     try {
-      const response = await axiosInstance.get(
-        "/students",
-        {
-          params: {
-            ...query,
-            gradeMin: query.gradeMin || undefined,
-            gradeMax: query.gradeMax || undefined,
-          },
-        }
-      );
+      //check page, itemsPerPage valid 
+      const response = await axiosInstance.get(`/students${location.search}`);
       setStudents(response.data.data);
     } catch (error) {
       console.log("Error fetching students:", error);
-
       if (error.response && error.response.status === 404) {
         setStudents([]);
       } else {
         console.error("Error fetching students:", error);
-        setNotification({
-          message: "Failed to fetch students",
-          detail: error.response
-            ? error.response.data.message
-            : "Unknown error",
-          type: "error",
-        });
+        showNotice(
+          "Failed to fetch students",
+          error.response ? error.response.data.message : "Unknown error",
+          "error"
+        );
       }
-
     }
   };
 
+  const handleQueryChange = (e) => {
+    const { name, value } = e.target;
+    setQueryParams((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleQuerySubmit = (e) => {
+    e.preventDefault();
+    const searchParams = new URLSearchParams();
+    Object.entries(queryParams).forEach(([key, value]) => {
+      if (value) searchParams.append(key, value);
+    });
+    searchParams.append("page", "1");
+    searchParams.append("itemsPerPage", "10");
+    navigate(`/students?${searchParams.toString()}`);
+  };
+
+  const handleSort = (column) => {
+    const newSortDirection =
+      queryParams.sortBy === column && queryParams.sortByDirection === "asc"
+        ? "desc"
+        : "asc";
+
+    setQueryParams((prev) => ({
+      ...prev,
+      sortBy: column,
+      sortByDirection: newSortDirection,
+    }));
+    const searchParams = new URLSearchParams(location.search);
+    searchParams.set("sortBy", column);
+    searchParams.set("sortByDirection", newSortDirection);
+    navigate(`/students?${searchParams.toString()}`);
+  };
+
+  const getSortIcon = (column) => {
+    if (queryParams.sortBy === column) {
+      return queryParams.sortByDirection === "asc" ? "▲" : "▼";
+    }
+    return null;
+  };
   const handleViewDetails = (student) => {
     setSelectedStudent(student);
     setIsViewModalOpen(true);
@@ -94,25 +113,20 @@ const StudentPage = () => {
   };
 
   const handleDelete = async (studentId) => {
-    if (window.confirm("Are you sure you want to delete this student?")) {
-      try {
-        await axiosInstance.delete(
-          `/students/${studentId}`);
-        setStudents(
-          students.filter((student) => student.studentId !== studentId)
-        );
-        setNotification({
-          message: "Student deleted successfully",
-          type: "success",
-        });
-      } catch (error) {
-        console.error("Error deleting student:", error);
-        setNotification({
-          message: "Failed to delete student",
-          detail: error.response.data.message,
-          type: "error",
-        });
-      }
+    if (!window.confirm("Are you sure you want to delete this student?")) {
+      return;
+    }
+    try {
+      await axiosInstance.delete(`/students/${studentId}`);
+      showNotice("Student deleted successfully", null, "success");
+      fetchStudents();
+    } catch (error) {
+      console.error("Error deleting student:", error);
+      showNotice(
+        "Failed to delete student",
+        error.response.data.message,
+        "error"
+      );
     }
   };
 
@@ -120,69 +134,57 @@ const StudentPage = () => {
     try {
       const response = await axiosInstance.put(
         `/students/${updatedStudent.studentId}`,
-        updatedStudent);
-      const updatedStudents = students.map((student) =>
-        student.studentId === updatedStudent.studentId
-          ? response.data.data
-          : student
+        updatedStudent
       );
-      setStudents(updatedStudents);
+      setStudents(
+        students.map((student) =>
+          student.studentId === updatedStudent.studentId
+            ? response.data.data
+            : student
+        )
+      );
       setIsEditModalOpen(false);
-      setNotification({
-        message: "Student updated successfully",
-        type: "success",
-      });
+      showNotice("Student updated successfully", null, "success");
     } catch (error) {
       console.error("Error updating student:", error);
-      if (error.response.data.message === "Validation failed") {
-        return error.response.data.error;
+      if (error.response && error.response.data && error.response.data.error) {
+        if (error.response.data.message === "Validation failed") {
+          return error.response.data.error;
+        }
+        showNotice(error.response.data.error, "error");
+      } else {
+        showNotice(
+          "An error occurred while updating the student",
+          error.response.data.message,
+          "error"
+        );
       }
-
-      setNotification({
-        message: "Failed to update student",
-        detail: error.response.data.message,
-        type: "error",
-      });
     }
   };
+
   const handleCreateStudent = async (newStudent) => {
     try {
-      const response = await axiosInstance.post(
-        "/students",
-        newStudent
-      );
+      const response = await axiosInstance.post("/students", newStudent);
       setStudents([...students, response.data.data]);
       setIsCreateModalOpen(false);
-      setNotification({
-        message: "Student created successfully",
-        type: "success",
-      });
+      showNotice("Student created successfully", null, "success");
     } catch (error) {
       console.error("Error creating student:", error);
-      if (error.response.data.message === "Validation failed") {
-        console.log("Validation failed student page");
-        return error.response.data.error;
+      if (error.response && error.response.data && error.response.data.error) {
+        if (error.response.data.message === "Validation failed") {
+          return error.response.data.error;
+        }
+        showNotice(error.response.data.error, "error");
+      } else {
+        showNotice(
+          "An error occurred while creating the student",
+          error.response.data.message,
+          "error"
+        );
       }
-
-      setNotification({
-        message: "Failed to create student",
-        detail: error.response.data.message,
-        type: "error",
-      });
     }
   };
 
-  const handleQueryChange = (e) => {
-    const { name, value } = e.target;
-    setQuery((prevQuery) => ({
-      ...prevQuery,
-      [name]: value,
-    }));
-  };
-
-  if (error) {
-    return <div>Error: {error}</div>;
-  }
   return (
     <div className="container mx-auto p-4">
       <div className="container grid grid-cols-2">
@@ -190,61 +192,65 @@ const StudentPage = () => {
         <div className="flex justify-end">
           <button
             onClick={() => setIsCreateModalOpen(true)}
-            className="bg-green-500 text-white px-4 py-2 rounded mb-4"
+            className="mb-4 bg-green-500 text-white px-4 py-2 rounded"
           >
             Create Student
           </button>
         </div>
       </div>
-      <form onSubmit={handleSearch} className="mb-4 bg-gray-100">
+
+      <form
+        onSubmit={handleQuerySubmit}
+        className="mb-4 bg-gray-100 p-4 rounded"
+      >
         <div className="grid grid-cols-3 gap-4">
           <input
             type="text"
             name="studentName"
             placeholder="Student Name"
-            value={query.studentName}
+            value={queryParams.studentName}
             onChange={handleQueryChange}
-            className="border p-2 rounded"
+            className="p-2 border rounded"
           />
           <input
             type="text"
             name="email"
             placeholder="Email"
-            value={query.email}
+            value={queryParams.email}
             onChange={handleQueryChange}
-            className="border p-2 rounded"
+            className="p-2 border rounded"
           />
           <input
             type="text"
             name="phoneNumber"
             placeholder="Phone Number"
-            value={query.phoneNumber}
+            value={queryParams.phoneNumber}
             onChange={handleQueryChange}
-            className="border p-2 rounded"
+            className="p-2 border rounded"
           />
           <input
             type="text"
             name="address"
             placeholder="Address"
-            value={query.address}
+            value={queryParams.address}
             onChange={handleQueryChange}
-            className="border p-2 rounded"
+            className="p-2 border rounded"
           />
           <input
             type="number"
             name="gradeMin"
-            placeholder="Minimum Grade"
-            value={query.gradeMin}
+            placeholder="Min Grade"
+            value={queryParams.gradeMin}
             onChange={handleQueryChange}
-            className="border p-2 rounded"
+            className="p-2 border rounded"
           />
           <input
             type="number"
             name="gradeMax"
-            placeholder="Maximum Grade"
-            value={query.gradeMax}
+            placeholder="Max Grade"
+            value={queryParams.gradeMax}
             onChange={handleQueryChange}
-            className="border p-2 rounded"
+            className="p-2 border rounded"
           />
         </div>
         <button
@@ -259,16 +265,31 @@ const StudentPage = () => {
         <table className="min-w-full bg-white border border-gray-300">
           <thead>
             <tr className="bg-gray-100">
-              <th className="py-2 px-4 border-b">ID</th>
-              <th className="py-2 px-4 border-b">Full Name</th>
-              <th className="py-2 px-4 border-b">Email</th>
-              <th className="py-2 px-4 border-b">Phone Number</th>
-              <th className="py-2 px-4 border-b">Date of Birth</th>
-              <th className="py-2 px-4 border-b">Address</th>
-              <th className="py-2 px-4 border-b">Grade</th>
+              <th className="py-2 px-4 border-b cursor-pointer" onClick={() => handleSort("studentId")}>
+                ID {getSortIcon("studentId")}
+              </th>
+              <th className="py-2 px-4 border-b cursor-pointer" onClick={() => handleSort("fullName")}>
+                Full Name {getSortIcon("fullName")}
+              </th>
+              <th className="py-2 px-4 border-b cursor-pointer" onClick={() => handleSort("email")}>
+                Email {getSortIcon("email")}
+              </th>
+              <th className="py-2 px-4 border-b cursor-pointer" onClick={() => handleSort("phoneNumber")}>
+                Phone Number {getSortIcon("phoneNumber")}
+              </th>
+              <th className="py-2 px-4 border-b cursor-pointer" onClick={() => handleSort("dateOfBirth")}>
+                Date of Birth {getSortIcon("dateOfBirth")}
+              </th>
+              <th className="py-2 px-4 border-b cursor-pointer" onClick={() => handleSort("address")}>
+                Address {getSortIcon("address")}
+              </th>
+              <th className="py-2 px-4 border-b cursor-pointer" onClick={() => handleSort("grade")}>
+                Grade {getSortIcon("grade")}
+              </th>
               <th className="py-2 px-4 border-b">Actions</th>
             </tr>
           </thead>
+
           <tbody>
             {students.map((student) => (
               <tr key={student.studentId} className="hover:bg-gray-50">
@@ -288,7 +309,9 @@ const StudentPage = () => {
                   {student.dateOfBirth}
                 </td>
                 <td className="py-2 px-4 border-b text-center">
-                  <span dangerouslySetInnerHTML={{ __html: student.address }}></span>
+                  <span
+                    dangerouslySetInnerHTML={{ __html: student.address }}
+                  ></span>
                 </td>
                 <td className="py-2 px-4 border-b text-center">
                   {student.grade}
@@ -318,7 +341,7 @@ const StudentPage = () => {
           </tbody>
         </table>
       ) : (
-        <p>No student found</p>
+        <p>No students found</p>
       )}
 
       {isViewModalOpen && (
@@ -342,13 +365,15 @@ const StudentPage = () => {
           onCreate={handleCreateStudent}
         />
       )}
-      {notification.message && (
+
+      {notice.message && (
         <div
-          className={`fixed bottom-4 right-4 p-4 rounded-md shadow-md ${notification.type === "success" ? "bg-green-500" : "bg-red-500"
-            } text-white`}
+          className={`fixed bottom-4 right-4 p-4 rounded-md shadow-md ${
+            notice.type === "success" ? "bg-green-500" : "bg-red-500"
+          } text-white`}
         >
-          <p>{notification.message}</p>
-          <p>{notification.detail}</p>
+          <p>{notice.message}</p>
+          <p>{notice.detail}</p>
         </div>
       )}
     </div>

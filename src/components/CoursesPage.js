@@ -1,20 +1,20 @@
 import React, { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import axiosInstance from "../utils/axiosConfig.js";
-import { useNavigate, useLocation } from "react-router-dom";
 import CourseDetailsPopup from "./CourseDetailsPopup.js";
-import StudentsInCoursePopup from "./StudentsInCoursePopup";
 import CourseEditModal from "./CourseEditModal";
 import CreateCourseModal from "./CreateCourseModal.js";
+import StudentsInCoursePopup from "./StudentsInCoursePopup";
 
 const CoursesPage = () => {
   const [courses, setCourses] = useState([]);
   const [notice, setNotice] = useState({ message: "", detail: "", type: "" });
   const [selectedCourseId, setSelectedCourseId] = useState(null);
-  const [selectedCourseForStudents, setSelectedCourseForStudents] = useState(null);
+  const [selectedCourseForStudents, setSelectedCourseForStudents] =
+    useState(null);
   const [editingCourse, setEditingCourse] = useState(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
-  // New state for query parameters
   const [queryParams, setQueryParams] = useState({
     courseId: "",
     courseName: "",
@@ -23,6 +23,10 @@ const CoursesPage = () => {
     creditMin: "",
     creditMax: "",
     schedule: "",
+    sortBy: "courseId",
+    sortByDirection: "asc",
+    page: 1,
+    itemsPerPage: 10,
   });
 
   const navigate = useNavigate();
@@ -30,19 +34,23 @@ const CoursesPage = () => {
 
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
-    const page = searchParams.get("page") || 1;
-    fetchCourses(page);
+    const page = searchParams.get("page");
+    const itemsPerPage = searchParams.get("itemsPerPage");
+    if (isNaN(page) || isNaN(itemsPerPage) || page <= 0 || itemsPerPage <= 0) {
+      setQueryParams({ ...queryParams, page: 1, itemsPerPage: 10 });
+      navigate(`/courses?page=1&itemsPerPage=10`);
+    }
+    fetchCourses();
   }, [location.search]);
 
   const showNotice = (message, detail, type) => {
     setNotice({ message, detail, type });
     setTimeout(() => setNotice({ message: "", detail: "", type: "" }), 3000);
   };
+
   const fetchCourses = async () => {
     try {
-      const response = await axiosInstance.get(
-        `/courses${location.search}`,
-      );
+      const response = await axiosInstance.get(`/courses${location.search}`);
       setCourses(response.data.data);
     } catch (error) {
       console.log("Error fetching courses:", error);
@@ -52,16 +60,12 @@ const CoursesPage = () => {
         console.error("Error fetching courses:", error);
         showNotice(
           "Failed to fetch courses",
-          error.response
-            ? error.response.data.message
-            : "Unknown error",
+          error.response ? error.response.data.message : "Unknown error",
           "error"
         );
       }
     }
-  }
-
-
+  };
   const handleQueryChange = (e) => {
     const { name, value } = e.target;
     setQueryParams((prev) => ({ ...prev, [name]: value }));
@@ -73,8 +77,23 @@ const CoursesPage = () => {
     Object.entries(queryParams).forEach(([key, value]) => {
       if (value) searchParams.append(key, value);
     });
-    searchParams.append("page", "1");
-    searchParams.append("itemsPerPage", "10");
+    navigate(`/courses?${searchParams.toString()}`);
+  };
+
+  const handleSort = (column) => {
+    const newSortDirection =
+      queryParams.sortBy === column && queryParams.sortByDirection === "asc"
+        ? "desc"
+        : "asc";
+
+    setQueryParams((prev) => ({
+      ...prev,
+      sortBy: column,
+      sortByDirection: newSortDirection,
+    }));
+    const searchParams = new URLSearchParams(location.search);
+    searchParams.set("sortBy", column);
+    searchParams.set("sortByDirection", newSortDirection);
     navigate(`/courses?${searchParams.toString()}`);
   };
 
@@ -85,6 +104,7 @@ const CoursesPage = () => {
   const handleViewStudents = (courseId) => {
     setSelectedCourseForStudents(courseId);
   };
+
   const handleEdit = (courseId) => {
     const courseToEdit = courses.find((course) => course.courseId === courseId);
     setEditingCourse(courseToEdit);
@@ -106,11 +126,18 @@ const CoursesPage = () => {
       );
     }
   };
+  const getSortIcon = (column) => {
+    if (queryParams.sortBy === column) {
+      return queryParams.sortByDirection === "asc" ? "▲" : "▼";
+    }
+    return null;
+  };
   const handleUpdateCourse = async (updatedCourse) => {
     try {
       const response = await axiosInstance.put(
         `/courses/${updatedCourse.courseId}`,
-        updatedCourse);
+        updatedCourse
+      );
       setCourses(
         courses.map((course) =>
           course.courseId === updatedCourse.courseId
@@ -122,45 +149,30 @@ const CoursesPage = () => {
       showNotice("Course updated successfully", null, "success");
     } catch (error) {
       console.error("Error updating course:", error);
-      if (error.response && error.response.data && error.response.data.error) {
-        if (error.response.data.message === "Validation failed") {
-          return error.response.data.error;
-        }
-        showNotice(error.response.data.error, "error");
-      } else {
-        showNotice(
-          "An error occurred while creating the course",
-          error.response.data.message,
-          "error"
-        );
-      }
+      showNotice(
+        "An error occurred while creating the course",
+        error.response.data.message,
+        "error"
+      );
     }
   };
 
   const handleCreateCourse = async (newCourse) => {
     try {
-      const response = await axiosInstance.post(
-        "/courses",
-        newCourse);
+      const response = await axiosInstance.post("/courses", newCourse);
       setCourses([...courses, response.data.data]);
       setIsCreateModalOpen(false);
       showNotice("Course created successfully", null, "success");
     } catch (error) {
       console.error("Error creating course:", error);
-      if (error.response && error.response.data && error.response.data.error) {
-        if (error.response.data.message === "Validation failed") {
-          return error.response.data.error;
-        }
-        showNotice(error.response.data.error, "error");
-      } else {
-        showNotice(
-          "An error occurred while creating the course",
-          error.response.data.message,
-          "error"
-        );
-      }
+      showNotice(
+        "An error occurred while creating the course",
+        error.response.data.message,
+        "error"
+      );
     }
   };
+
   return (
     <div className="container mx-auto p-4">
       <div className="container grid grid-cols-2">
@@ -244,19 +256,59 @@ const CoursesPage = () => {
           Search
         </button>
       </form>
+
       {courses.length > 0 ? (
         <table className="min-w-full bg-white border border-gray-300">
           <thead>
             <tr className="bg-gray-100">
-              <th className="py-2 px-4 border-b">ID</th>
-              <th className="py-2 px-4 border-b">Name</th>
-              {/* <th className="py-2 px-4 border-b">Description</th> */}
-              <th className="py-2 px-4 border-b">Credit</th>
-              <th className="py-2 px-4 border-b">Instructor</th>
-              <th className="py-2 px-4 border-b">Department</th>
-              <th className="py-2 px-4 border-b">Start Date</th>
-              <th className="py-2 px-4 border-b">End Date</th>
-              <th className="py-2 px-4 border-b">Schedule</th>
+              <th
+                className="py-2 px-4 border-b cursor-pointer"
+                onClick={() => handleSort("courseId")}
+              >
+                ID{getSortIcon("courseId")}
+              </th>
+              <th
+                className="py-2 px-4 border-b cursor-pointer"
+                onClick={() => handleSort("courseName")}
+              >
+                Name{getSortIcon("courseName")}
+              </th>
+              <th
+                className="py-2 px-4 border-b cursor-pointer"
+                onClick={() => handleSort("credit")}
+              >
+                Credit{getSortIcon("credit")}
+              </th>
+              <th
+                className="py-2 px-4 border-b cursor-pointer"
+                onClick={() => handleSort("instructor")}
+              >
+                Instructor{getSortIcon("instructor")}
+              </th>
+              <th
+                className="py-2 px-4 border-b cursor-pointer"
+                onClick={() => handleSort("department")}
+              >
+                Department{getSortIcon("department")}
+              </th>
+              <th
+                className="py-2 px-4 border-b cursor-pointer"
+                onClick={() => handleSort("startDate")}
+              >
+                Start Date{"startDate"}
+              </th>
+              <th
+                className="py-2 px-4 border-b cursor-pointer"
+                onClick={() => handleSort("endDate")}
+              >
+                End Date{"endDate"}
+              </th>
+              <th
+                className="py-2 px-4 border-b cursor-pointer"
+                onClick={() => handleSort("schedule")}
+              >
+                Schedule{"schedule"}
+              </th>
               <th className="py-2 px-4 border-b">Actions</th>
             </tr>
           </thead>
@@ -269,7 +321,6 @@ const CoursesPage = () => {
                 <td className="py-2 px-4 border-b text-center">
                   {course.courseName}
                 </td>
-                {/* <td className="py-2 px-4 border-b">{course.description}</td> */}
                 <td className="py-2 px-4 border-b text-center">
                   {course.credit}
                 </td>
@@ -286,7 +337,9 @@ const CoursesPage = () => {
                   {course.endDate}
                 </td>
                 <td className="py-2 px-4 border-b text-center">
-                  <span dangerouslySetInnerHTML={{ __html: course.schedule }}></span>
+                  <span
+                    dangerouslySetInnerHTML={{ __html: course.schedule }}
+                  ></span>
                 </td>
                 <td className="py-2 px-4 border-b grid grid-cols-2">
                   <button
@@ -321,6 +374,7 @@ const CoursesPage = () => {
       ) : (
         <p>No courses found</p>
       )}
+
       {selectedCourseId && (
         <CourseDetailsPopup
           courseId={selectedCourseId}
@@ -342,16 +396,19 @@ const CoursesPage = () => {
           onUpdate={handleUpdateCourse}
         />
       )}
+
       {isCreateModalOpen && (
         <CreateCourseModal
           onClose={() => setIsCreateModalOpen(false)}
           onCreate={handleCreateCourse}
         />
       )}
+
       {notice.message && (
         <div
-          className={`fixed bottom-4 right-4 p-4 rounded-md shadow-md ${notice.type === "success" ? "bg-green-500" : "bg-red-500"
-            } text-white`}
+          className={`fixed bottom-4 right-4 p-4 rounded-md shadow-md ${
+            notice.type === "success" ? "bg-green-500" : "bg-red-500"
+          } text-white`}
         >
           <p>{notice.message}</p>
           <p>{notice.detail}</p>

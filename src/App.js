@@ -17,25 +17,33 @@ import axiosInstance from "./utils/axiosConfig";
 function App() {
   const [username, setUsername] = useState("");
   const [accessToken, setAccessToken] = useState("");
-
+  const [isLoading, setIsLoading] = useState(true);
   useEffect(() => {
-    var accessToken = localStorage.getItem("accessToken");
-    setAccessToken(accessToken);
-    if (accessToken) {
+    const storedAccessToken = localStorage.getItem("accessToken");
+    console.log("App useEffect: accessToken", storedAccessToken);
+    setAccessToken(storedAccessToken);
+
+    if (storedAccessToken) {
       try {
-        const decodedToken = jwtDecode(accessToken);
+        const decodedToken = jwtDecode(storedAccessToken);
         setUsername(decodedToken.unique_name || "");
       } catch (error) {
         console.error("Error decoding token:", error);
         setUsername("");
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
       }
     } else {
       setUsername("");
     }
-  }, [accessToken]);
+    setIsLoading(false);
+  }, []);
+
   const logoutThisDevice = () => {
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
+    setAccessToken("");
+    setUsername("");
     window.location.href = "/login";
   };
 
@@ -53,6 +61,9 @@ function App() {
     }
   };
 
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
   return (
     <Router>
       {accessToken && (
@@ -63,8 +74,8 @@ function App() {
         />
       )}
       <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        <Route path="/login" element={accessToken ? <Navigate to="/courses" /> : <Login />} />
+        <Route path="/register" element={accessToken ? <Navigate to="/courses" /> : <Register />} />
         <Route
           path="/courses"
           element={
@@ -95,7 +106,8 @@ function App() {
             )
           }
         />
-        <Route path="*" element={<Navigate to="/courses" />} />
+        <Route path="/" element={<Navigate to={accessToken ? "/courses" : "/login"} />} />
+        <Route path="*" element={<Navigate to={accessToken ? "/courses" : "/login"} />} />
       </Routes>
     </Router>
   );

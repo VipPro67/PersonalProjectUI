@@ -23,7 +23,7 @@ const Register = () => {
   const handleLanguageChange = (e) => {
     const selectedLanguage = e.target.value;
     setLanguage(selectedLanguage);
-    localStorage.setItem("acceptLanguage", selectedLanguage); // Save selected language to localStorage
+    localStorage.setItem("acceptLanguage", selectedLanguage); 
   };
 
   const handleSubmit = async (e) => {

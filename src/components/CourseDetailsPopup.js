@@ -3,7 +3,6 @@ import axiosInstance from "../utils/axiosConfig";
 
 const CourseDetailsPopup = ({ courseId, onClose }) => {
   const [courseDetails, setCourseDetails] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -12,18 +11,15 @@ const CourseDetailsPopup = ({ courseId, onClose }) => {
         const response = await axiosInstance.get(
           `/courses/${courseId}`);
         setCourseDetails(response.data.data);
-        setLoading(false);
       } catch (error) {
         console.error("Error fetching course details:", error);
         setError("Failed to fetch course details");
-        setLoading(false);
       }
     };
 
     fetchCourseDetails();
   }, [courseId]);
 
-  if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
   if (!courseDetails) return null;
 

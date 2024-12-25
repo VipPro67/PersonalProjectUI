@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios"
-import { useNavigate, Link } from "react-router-dom";
+import axios from "axios";
+import React, { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import ValidationMessage from "./ValidationMessage";
 
 const Login = () => {
@@ -24,37 +24,37 @@ const Login = () => {
       const response = await axios.post(
         "http://20.39.224.87:5000/api/auth/login",
         {
-          username,
+          username,  
           password,
         },
         {
           headers: {
             Accept: "application/json",
             "Content-Type": "application/json",
-            "Accept-Language": language ? language : "en-US", // Include selected language in headers
+            "Accept-Language": language ? language : "en-US",
           },
         }
       );
-      if (response.data.status === 200) {
-        // Store both access token and refresh token
-        const tokens = {
-          accessToken: response.data.data.accessToken,
-          refreshToken: response.data.data.refreshToken,
-        };
-        localStorage.setItem("accessToken", tokens.accessToken);
-        localStorage.setItem("refreshToken", tokens.refreshToken);
-        navigate("/courses");
+
+      // Check if the response contains the expected data
+      if (response.data && response.data.status === 200 && response.data.data) {
+        const { accessToken, refreshToken } = response.data.data;
+        if (accessToken && refreshToken) {
+          localStorage.setItem("accessToken", accessToken);
+          localStorage.setItem("refreshToken", refreshToken);
+          window.location.reload();
+        } else {
+          throw new Error("Invalid token data received");
+        }
       } else {
-        setErrors({
-          general: response.data.message || "An error occurred during login.",
-        });
+        throw new Error(response.data.message || "An unexpected error occurred");
       }
     } catch (error) {
+      console.error("Login error:", error);
       if (error.response) {
         const { data } = error.response;
         if (data.status === 400 && data.error) {
           setErrors(data.error);
-          console.log(errors);
         } else if (data.status === 401) {
           setErrors({
             general: data.error || "Username or password is invalid.",
@@ -69,11 +69,11 @@ const Login = () => {
           general: "No response received from the server. Please try again.",
         });
       } else {
-        setErrors({ general: "An error occurred. Please try again." });
+        setErrors({ general: error.message || "An error occurred. Please try again." });
       }
-      console.error("Login failed:", error);
     }
   };
+
 
   const handleLanguageChange = (e) => {
     const selectedLanguage = e.target.value;
