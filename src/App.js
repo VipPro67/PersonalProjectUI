@@ -20,7 +20,6 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
   useEffect(() => {
     const storedAccessToken = localStorage.getItem("accessToken");
-    console.log("App useEffect: accessToken", storedAccessToken);
     setAccessToken(storedAccessToken);
 
     if (storedAccessToken) {

@@ -13,7 +13,9 @@ const Register = () => {
     address: "",
   });
   const [errors, setErrors] = useState({});
-  const [language, setLanguage] = useState(localStorage.getItem("acceptLanguage") || "en-US");
+  const [language, setLanguage] = useState(
+    localStorage.getItem("acceptLanguage") || "en-US"
+  );
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -23,7 +25,7 @@ const Register = () => {
   const handleLanguageChange = (e) => {
     const selectedLanguage = e.target.value;
     setLanguage(selectedLanguage);
-    localStorage.setItem("acceptLanguage", selectedLanguage); 
+    localStorage.setItem("acceptLanguage", selectedLanguage);
   };
 
   const handleSubmit = async (e) => {
@@ -37,7 +39,7 @@ const Register = () => {
           headers: {
             Accept: "application/json",
             "Content-Type": "application/json",
-            "Accept-Language": language ? language : "en-US", 
+            "Accept-Language": language ? language : "en-US",
           },
         }
       );
@@ -47,12 +49,16 @@ const Register = () => {
         navigate("/login"); // Redirect to login page after successful registration
       } else {
         setErrors({
-          general: response.data.message || "An error occurred during registration.",
+          general:
+            response.data.message || "An error occurred during registration.",
         });
       }
     } catch (error) {
       if (error.response && error.response.data && error.response.data.error) {
         setErrors(error.response.data.error); // Set specific field errors from the response
+        if(error.response.data.message !== "Dữ liệu không hợp lệ." || error.response.data.message !== "Validation failed"){
+          setErrors({ general:error.response.data.error});
+        }
       } else {
         setErrors({ general: "An error occurred. Please try again." });
       }
@@ -63,7 +69,10 @@ const Register = () => {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 relative">
       {/* Language Selector positioned in top-right */}
       <div className="absolute top-4 right-4">
-        <label htmlFor="language" className="block text-sm font-medium text-gray-700">
+        <label
+          htmlFor="language"
+          className="block text-sm font-medium text-gray-700"
+        >
           Language
         </label>
         <select
@@ -122,7 +131,6 @@ const Register = () => {
               <p className="text-sm">{errors.general}</p>
             </div>
           )}
-
           <div>
             <button
               type="submit"
@@ -132,7 +140,7 @@ const Register = () => {
             </button>
           </div>
         </form>
-
+        
         <div className="text-center mt-4">
           <Link
             to="/login"
