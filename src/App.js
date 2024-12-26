@@ -49,7 +49,7 @@ function App() {
   const logoutAllDevices = async () => {
     try {
       await axiosInstance.post(
-        `http://20.39.224.87:5000/api/auth/logout`,
+        `http://20.108.26.12:5000/api/auth/logout`,
       );
       logoutThisDevice(); 
     } catch (error) {

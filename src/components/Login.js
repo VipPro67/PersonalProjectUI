@@ -16,7 +16,7 @@ const Login = () => {
     const getTokens = async () => {
       try {
         const response = await axios.post(
-          "http://20.39.224.87:5000/api/auth/refresh-token",
+          "http://20.108.26.12:5000/api/auth/refresh-token",
           {
             refreshToken: localStorage.getItem("refreshToken"),
           },
@@ -61,7 +61,7 @@ const Login = () => {
     setErrors({});
     try {
       const response = await axios.post(
-        "http://20.39.224.87:5000/api/auth/login",
+        "http://20.108.26.12:5000/api/auth/login",
         {
           username,
           password,
@@ -82,6 +82,7 @@ const Login = () => {
           localStorage.setItem("accessToken", accessToken);
           localStorage.setItem("refreshToken", refreshToken);
           navigate("/courses");
+          window.location.reload();
         } else {
           throw new Error("Invalid token data received");
         }

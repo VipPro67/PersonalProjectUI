@@ -33,7 +33,7 @@ const Register = () => {
     setErrors({});
     try {
       const response = await axios.post(
-        "http://20.39.224.87:5000/api/auth/register",
+        "http://20.108.26.12:5000/api/auth/register",
         formData,
         {
           headers: {
