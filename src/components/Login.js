@@ -7,15 +7,54 @@ const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState({});
-  const [language, setLanguage] = useState(localStorage.getItem("acceptLanguage") || "en-US");
+  const [language, setLanguage] = useState(
+    localStorage.getItem("acceptLanguage") || "en-US"
+  );
   const navigate = useNavigate();
 
   useEffect(() => {
+    const getTokens = async () => {
+      try {
+        const response = await axios.post(
+          "http://20.39.224.87:5000/api/auth/refresh-token",
+          {
+            refreshToken: localStorage.getItem("refreshToken"),
+          },
+          {
+            headers: {
+              Accept: "application/json",
+              "Content-Type": "application/json",
+              "Accept-Language": language ? language : "en-US",
+            },
+          }
+        );
+        const newToken = response.data.data.accessToken;
+        localStorage.setItem("accessToken", newToken);
+        localStorage.setItem("refreshAttempted", "true");
+        navigate("/courses");
+      } catch (error) {
+        console.error("Refresh token error:", error);
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        localStorage.setItem("refreshAttempted", "true");
+      }
+    };
     const accessToken = localStorage.getItem("accessToken");
     if (accessToken) {
       navigate("/courses");
+    } else {
+      const refreshToken = localStorage.getItem("refreshToken");
+      const refreshAttempted = localStorage.getItem("refreshAttempted");
+      if (refreshToken && refreshAttempted !== "true") {
+        getTokens();
+      }
     }
-  }, [navigate]);
+
+    // Clean up function to remove the refreshAttempted flag when component unmounts
+    return () => {
+      localStorage.removeItem("refreshAttempted");
+    };
+  }, [navigate, language]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -24,7 +63,7 @@ const Login = () => {
       const response = await axios.post(
         "http://20.39.224.87:5000/api/auth/login",
         {
-          username,  
+          username,
           password,
         },
         {
@@ -42,12 +81,14 @@ const Login = () => {
         if (accessToken && refreshToken) {
           localStorage.setItem("accessToken", accessToken);
           localStorage.setItem("refreshToken", refreshToken);
-          window.location.reload();
+          navigate("/courses");
         } else {
           throw new Error("Invalid token data received");
         }
       } else {
-        throw new Error(response.data.message || "An unexpected error occurred");
+        throw new Error(
+          response.data.message || "An unexpected error occurred"
+        );
       }
     } catch (error) {
       console.error("Login error:", error);
@@ -69,11 +110,12 @@ const Login = () => {
           general: "No response received from the server. Please try again.",
         });
       } else {
-        setErrors({ general: error.message || "An error occurred. Please try again." });
+        setErrors({
+          general: error.message || "An error occurred. Please try again.",
+        });
       }
     }
   };
-
 
   const handleLanguageChange = (e) => {
     const selectedLanguage = e.target.value;
@@ -84,7 +126,10 @@ const Login = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="absolute top-4 right-4">
-        <label htmlFor="language" className="block text-sm font-medium text-gray-700">
+        <label
+          htmlFor="language"
+          className="block text-sm font-medium text-gray-700"
+        >
           Language
         </label>
         <select
@@ -157,8 +202,6 @@ const Login = () => {
               Sign in
             </button>
           </div>
-
-
 
           <div className="text-center mt-4">
             <Link

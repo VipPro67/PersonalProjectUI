@@ -79,7 +79,6 @@ const CoursesPage = () => {
       );
       setCourses(response.data.data);
       setPagination(response.data.pagination);
-      console.log("Pagination:", response.data.pagination);
     } catch (error) {
       console.log("Error fetching courses:", error);
       if (error.response && error.response.status === 404) {
@@ -184,11 +183,18 @@ const CoursesPage = () => {
       showNotice("Course updated successfully", null, "success");
     } catch (error) {
       console.error("Error updating course:", error);
-      showNotice(
-        "An error occurred while creating the course",
-        error.response.data.message,
-        "error"
-      );
+      if (error.response && error.response.data && error.response.data.error) {
+        if (error.response.data.message === "Validation failed") {
+          return error.response.data.error;
+        }
+        showNotice(error.response.data.error, "error");
+      } else {
+        showNotice(
+          "An error occurred while creating the updated course",
+          error.response.data.message,
+          "error"
+        );
+      }
     }
   };
 
@@ -199,12 +205,18 @@ const CoursesPage = () => {
       setIsCreateModalOpen(false);
       showNotice("Course created successfully", null, "success");
     } catch (error) {
-      console.error("Error creating course:", error);
-      showNotice(
-        "An error occurred while creating the course",
-        error.response.data.message,
-        "error"
-      );
+      if (error.response && error.response.data && error.response.data.error) {
+        if (error.response.data.message === "Validation failed") {
+          return error.response.data.error;
+        }
+        showNotice(error.response.data.error, "error");
+      } else {
+        showNotice(
+          "An error occurred while creating the course",
+          error.response.data.message,
+          "error"
+        );
+      }
     }
   };
 
